@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-4">{{ title }}</h1>
+                <form method="post" class="row g-3">
+                    {{ form.hidden_tag() }}
+                    <div class="col-md-6">
+                        {{ form.pond_id.label(class="form-label") }}
+                        {{ form.pond_id(class="form-select") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.fish_type_id.label(class="form-label") }}
+                        {{ form.fish_type_id(class="form-select") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.quantity_estimate.label(class="form-label") }}
+                        {{ form.quantity_estimate(class="form-control") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.note.label(class="form-label") }}
+                        {{ form.note(class="form-control") }}
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-primary">{{ form.submit.label.text }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

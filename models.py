@@ -111,6 +111,12 @@ class FishingPond(TimestampMixin, db.Model):
     images = db.relationship(
         "Image", back_populates="pond", cascade="all, delete-orphan", lazy=True
     )
+    fish_types = db.relationship(
+        "PondFishType", back_populates="pond", cascade="all, delete-orphan", lazy=True
+    )
+    fishing_activities = db.relationship(
+        "FishingActivity", back_populates="pond", cascade="all, delete-orphan", lazy=True
+    )
 
     @property
     def primary_image(self):
@@ -138,6 +144,30 @@ class Service(TimestampMixin, db.Model):
     default_price = db.Column(db.Float, default=0, nullable=False)
 
     ponds = db.relationship("PondService", back_populates="service", lazy=True)
+
+
+class FishType(TimestampMixin, db.Model):
+    __tablename__ = "fish_types"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(255))
+
+    ponds = db.relationship("PondFishType", back_populates="fish_type", lazy=True)
+    activities = db.relationship("FishingActivity", back_populates="fish_type", lazy=True)
+
+
+class PondFishType(TimestampMixin, db.Model):
+    __tablename__ = "pond_fish_types"
+
+    id = db.Column(db.Integer, primary_key=True)
+    pond_id = db.Column(db.Integer, db.ForeignKey("fishing_ponds.id"), nullable=False)
+    fish_type_id = db.Column(db.Integer, db.ForeignKey("fish_types.id"), nullable=False)
+    quantity_estimate = db.Column(db.Integer, default=0, nullable=False)
+    note = db.Column(db.String(255))
+
+    pond = db.relationship("FishingPond", back_populates="fish_types")
+    fish_type = db.relationship("FishType", back_populates="ponds")
 
 
 class PondService(TimestampMixin, db.Model):
@@ -172,6 +202,9 @@ class Booking(TimestampMixin, db.Model):
     pond = db.relationship("FishingPond", back_populates="bookings")
     payment = db.relationship(
         "Payment", back_populates="booking", uselist=False, cascade="all, delete-orphan"
+    )
+    activities = db.relationship(
+        "FishingActivity", back_populates="booking", cascade="all, delete-orphan", lazy=True
     )
 
     @property
@@ -216,3 +249,23 @@ class Image(TimestampMixin, db.Model):
     is_primary = db.Column(db.Boolean, default=False, nullable=False)
 
     pond = db.relationship("FishingPond", back_populates="images")
+
+
+class FishingActivity(TimestampMixin, db.Model):
+    __tablename__ = "fishing_activities"
+
+    id = db.Column(db.Integer, primary_key=True)
+    pond_id = db.Column(db.Integer, db.ForeignKey("fishing_ponds.id"), nullable=False)
+    fish_type_id = db.Column(db.Integer, db.ForeignKey("fish_types.id"), nullable=False)
+    booking_id = db.Column(db.Integer, db.ForeignKey("bookings.id"))
+    customer_name = db.Column(db.String(120), nullable=False)
+    activity_date = db.Column(db.Date, nullable=False)
+    start_time = db.Column(db.String(20), nullable=False)
+    duration_hours = db.Column(db.Integer, default=1, nullable=False)
+    catch_weight = db.Column(db.Float, default=0, nullable=False)
+    note = db.Column(db.Text)
+    status = db.Column(db.String(30), default="completed", nullable=False)
+
+    pond = db.relationship("FishingPond", back_populates="fishing_activities")
+    fish_type = db.relationship("FishType", back_populates="activities")
+    booking = db.relationship("Booking", back_populates="activities")

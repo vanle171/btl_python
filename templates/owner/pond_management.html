@@ -8,7 +8,11 @@
                 <h1 class="h4 mb-1">Hồ câu của tôi</h1>
                 <p class="text-muted mb-0">Thêm, sửa, xóa và cập nhật dịch vụ cho từng hồ câu.</p>
             </div>
-            <a href="{{ url_for('owner.create_pond') }}" class="btn btn-primary">Thêm hồ câu</a>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ url_for('owner.fish_types') }}" class="btn btn-outline-primary">Loại cá</a>
+                <a href="{{ url_for('owner.activities') }}" class="btn btn-outline-dark">Hoạt động câu</a>
+                <a href="{{ url_for('owner.create_pond') }}" class="btn btn-primary">Thêm hồ câu</a>
+            </div>
         </div>
         <div class="table-responsive">
             <table class="table align-middle">

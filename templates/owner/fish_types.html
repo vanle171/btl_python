@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Quản lý loại cá{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h1 class="h4 mb-1">Quản lý loại cá</h1>
+                <p class="text-muted mb-0">Theo dõi các loại cá đang có ở từng hồ câu như trắm, mè, rô phi, cá chép.</p>
+            </div>
+            <a href="{{ url_for('owner.create_fish_type') }}" class="btn btn-primary">Thêm loại cá</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Hồ câu</th>
+                        <th>Loại cá</th>
+                        <th>Số lượng ước tính</th>
+                        <th>Ghi chú</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            <td>{{ row.pond.name }}</td>
+                            <td>{{ row.fish_type.name }}</td>
+                            <td>{{ row.quantity_estimate }}</td>
+                            <td>{{ row.note or "-" }}</td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ url_for('owner.edit_fish_type', row_id=row.id) }}" class="btn btn-sm btn-outline-primary">Sửa</a>
+                                    <form method="post" action="{{ url_for('owner.delete_fish_type', row_id=row.id) }}">
+                                        <button class="btn btn-sm btn-outline-danger">Xóa</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">Chưa có loại cá nào được khai báo.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

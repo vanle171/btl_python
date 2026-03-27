@@ -4,9 +4,12 @@ from extensions import db
 from models import (
     Booking,
     District,
+    FishType,
     FishingPond,
+    FishingActivity,
     Image,
     Payment,
+    PondFishType,
     PondService,
     Review,
     Role,
@@ -43,9 +46,25 @@ DISTRICTS = [
     "Ung Hoa",
 ]
 
+DEFAULT_FISH_TYPES = [
+    ("Cá trắm", "Loại cá phổ biến tại hồ câu dịch vụ"),
+    ("Cá mè", "Loại cá số lượng lớn, dễ gặp"),
+    ("Cá rô phi", "Phù hợp câu giải trí"),
+    ("Cá chép", "Loại cá được nhiều khách ưa chuộng"),
+]
+
 
 def seed_data():
     if Role.query.first():
+        existing_fish_names = {item.name for item in FishType.query.all()}
+        missing_fish_types = [
+            FishType(name=name, description=description)
+            for name, description in DEFAULT_FISH_TYPES
+            if name not in existing_fish_names
+        ]
+        if missing_fish_types:
+            db.session.add_all(missing_fish_types)
+            db.session.commit()
         return
 
     roles = {
@@ -65,6 +84,8 @@ def seed_data():
         Service(name="Bai gui xe", description="Giu xe may va o to", default_price=10000),
     ]
     db.session.add_all(services)
+    fish_types = [FishType(name=name, description=description) for name, description in DEFAULT_FISH_TYPES]
+    db.session.add_all(fish_types)
     db.session.flush()
 
     admin = User(
@@ -108,6 +129,7 @@ def seed_data():
 
     district_map = {district.name: district for district in districts}
     service_map = {service.name: service for service in services}
+    fish_type_map = {fish_type.name: fish_type for fish_type in fish_types}
 
     ponds = [
         FishingPond(
@@ -203,6 +225,16 @@ def seed_data():
             PondService(pond=ponds[2], service=service_map["Bai gui xe"], custom_price=15000),
         ]
     )
+    db.session.add_all(
+        [
+            PondFishType(pond=ponds[0], fish_type=fish_type_map["Cá trắm"], quantity_estimate=120),
+            PondFishType(pond=ponds[0], fish_type=fish_type_map["Cá mè"], quantity_estimate=90),
+            PondFishType(pond=ponds[1], fish_type=fish_type_map["Cá rô phi"], quantity_estimate=150),
+            PondFishType(pond=ponds[1], fish_type=fish_type_map["Cá chép"], quantity_estimate=70),
+            PondFishType(pond=ponds[2], fish_type=fish_type_map["Cá trắm"], quantity_estimate=110),
+            PondFishType(pond=ponds[2], fish_type=fish_type_map["Cá rô phi"], quantity_estimate=130),
+        ]
+    )
 
     booking = Booking(
         user=customer,
@@ -229,6 +261,41 @@ def seed_data():
         [
             Review(user=customer, pond=ponds[0], rating=5, comment="Ho sach dep, nhan vien ho tro nhanh."),
             Review(user=customer, pond=ponds[1], rating=4, comment="Dich vu on, bai gui xe tien loi."),
+        ]
+    )
+    db.session.add_all(
+        [
+            FishingActivity(
+                pond=ponds[0],
+                fish_type=fish_type_map["Cá trắm"],
+                booking=booking,
+                customer_name="Lê Văn Người Dùng",
+                activity_date=date.today(),
+                start_time="06:30",
+                duration_hours=4,
+                catch_weight=3.5,
+                note="Buổi câu sáng cuối tuần.",
+            ),
+            FishingActivity(
+                pond=ponds[0],
+                fish_type=fish_type_map["Cá mè"],
+                customer_name="Nguyễn Văn An",
+                activity_date=date.today(),
+                start_time="08:00",
+                duration_hours=3,
+                catch_weight=2.1,
+                note="Khách quen của hồ.",
+            ),
+            FishingActivity(
+                pond=ponds[2],
+                fish_type=fish_type_map["Cá rô phi"],
+                customer_name="Trần Minh Khoa",
+                activity_date=date.today() - timedelta(days=1),
+                start_time="07:15",
+                duration_hours=5,
+                catch_weight=4.2,
+                note="Hoạt động nhóm 2 người.",
+            ),
         ]
     )
 

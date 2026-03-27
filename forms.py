@@ -90,6 +90,26 @@ class PondServiceForm(FlaskForm):
     submit = SubmitField("Cập nhật dịch vụ")
 
 
+class PondFishTypeForm(FlaskForm):
+    pond_id = SelectField("Hồ câu", coerce=int, validators=[DataRequired()])
+    fish_type_id = SelectField("Loại cá", coerce=int, validators=[DataRequired()])
+    quantity_estimate = IntegerField("Số lượng ước tính", validators=[DataRequired(), NumberRange(min=0)])
+    note = StringField("Ghi chú", validators=[Optional(), Length(max=255)])
+    submit = SubmitField("Lưu loại cá")
+
+
+class FishingActivityForm(FlaskForm):
+    pond_id = SelectField("Hồ câu", coerce=int, validators=[DataRequired()])
+    fish_type_id = SelectField("Loại cá", coerce=int, validators=[DataRequired()])
+    customer_name = StringField("Tên khách", validators=[DataRequired(), Length(max=120)])
+    activity_date = DateField("Ngày hoạt động", validators=[DataRequired()], default=date.today)
+    start_time = StringField("Khung giờ", validators=[DataRequired(), Length(max=20)])
+    duration_hours = IntegerField("Số giờ câu", validators=[DataRequired(), NumberRange(min=1)])
+    catch_weight = FloatField("Khối lượng cá câu được (kg)", validators=[Optional(), NumberRange(min=0)])
+    note = TextAreaField("Ghi chú", validators=[Optional(), Length(max=1000)])
+    submit = SubmitField("Lưu hoạt động")
+
+
 class BookingForm(FlaskForm):
     booking_date = DateField("Ngày đặt", validators=[DataRequired()], default=date.today)
     start_time = StringField("Khung giờ", validators=[DataRequired(), Length(max=20)])

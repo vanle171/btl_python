@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Quản lý hoạt động câu{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h1 class="h4 mb-1">Quản lý hoạt động câu</h1>
+                <p class="text-muted mb-0">Danh sách hoạt động câu cá phát sinh tại các hồ của bạn.</p>
+            </div>
+            <a href="{{ url_for('owner.create_activity') }}" class="btn btn-primary">Thêm hoạt động mới</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Hồ câu</th>
+                        <th>Loại cá</th>
+                        <th>Khách</th>
+                        <th>Ngày</th>
+                        <th>Giờ</th>
+                        <th>Số giờ</th>
+                        <th>Khối lượng</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activity in activities %}
+                        <tr>
+                            <td>{{ activity.pond.name }}</td>
+                            <td>{{ activity.fish_type.name }}</td>
+                            <td>{{ activity.customer_name }}</td>
+                            <td>{{ activity.activity_date.strftime("%d/%m/%Y") }}</td>
+                            <td>{{ activity.start_time }}</td>
+                            <td>{{ activity.duration_hours }}</td>
+                            <td>{{ activity.catch_weight }} kg</td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ url_for('owner.edit_activity', activity_id=activity.id) }}" class="btn btn-sm btn-outline-primary">Sửa</a>
+                                    <form method="post" action="{{ url_for('owner.delete_activity', activity_id=activity.id) }}">
+                                        <button class="btn btn-sm btn-outline-danger">Xóa</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">Chưa có hoạt động câu nào.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
