@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-xl-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-4">{{ title }}</h1>
+                <form method="post" class="row g-3">
+                    {{ form.hidden_tag() }}
+                    <div class="col-md-6">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.district_id.label(class="form-label") }}
+                        {{ form.district_id(class="form-select") }}
+                    </div>
+                    <div class="col-12">
+                        {{ form.address.label(class="form-label") }}
+                        {{ form.address(class="form-control") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.phone.label(class="form-label") }}
+                        {{ form.phone(class="form-control") }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.open_time.label(class="form-label") }}
+                        {{ form.open_time(class="form-control") }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.close_time.label(class="form-label") }}
+                        {{ form.close_time(class="form-control") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.fishing_type.label(class="form-label") }}
+                        {{ form.fishing_type(class="form-control") }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.price_per_slot.label(class="form-label") }}
+                        {{ form.price_per_slot(class="form-control") }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.total_slots.label(class="form-label") }}
+                        {{ form.total_slots(class="form-control") }}
+                    </div>
+                    <div class="col-md-3">
+                        {{ form.available_slots.label(class="form-label") }}
+                        {{ form.available_slots(class="form-control") }}
+                    </div>
+                    <div class="col-md-9">
+                        {{ form.image_url.label(class="form-label") }}
+                        {{ form.image_url(class="form-control") }}
+                    </div>
+                    <div class="col-12">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="5") }}
+                    </div>
+                    <div class="col-12 form-check ms-2">
+                        {{ form.featured(class="form-check-input") }}
+                        {{ form.featured.label(class="form-check-label") }}
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Cập nhật dịch vụ{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-2">Cập nhật dịch vụ cho {{ pond.name }}</h1>
+                <p class="text-muted">Chọn các dịch vụ đang có tại hồ câu. Giá sẽ lấy mặc định từ hệ thống.</p>
+                <form method="post">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.service_ids.label(class="form-label") }}
+                        {{ form.service_ids(class="form-select", size="8", multiple=true) }}
+                    </div>
+                    <button class="btn btn-primary">{{ form.submit.label.text }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Lịch sử đặt chỗ{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h1 class="h4 mb-1">Lịch sử đặt chỗ</h1>
+                <p class="text-muted mb-0">Theo dõi toàn bộ đơn đặt của bạn.</p>
+            </div>
+            <a href="{{ url_for('main.pond_list') }}" class="btn btn-outline-primary">Đặt thêm</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Hồ câu</th>
+                        <th>Ngày</th>
+                        <th>Khung giờ</th>
+                        <th>Số chỗ</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                        <tr>
+                            <td>{{ booking.pond.name }}</td>
+                            <td>{{ booking.booking_date.strftime("%d/%m/%Y") }}</td>
+                            <td>{{ booking.start_time }}</td>
+                            <td>{{ booking.slot_count }}</td>
+                            <td>{{ "{:,.0f}".format(booking.total_price) }} VND</td>
+                            <td><span class="badge text-bg-light">{{ booking.status }}</span></td>
+                            <td class="text-end">
+                                {% if booking.can_cancel %}
+                                    <form method="post" action="{{ url_for('main.cancel_booking', booking_id=booking.id) }}">
+                                        <button class="btn btn-sm btn-outline-danger">Hủy đơn</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">Bạn chưa có đơn đặt nào.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

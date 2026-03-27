@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Danh sách hồ câu{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Tìm kiếm hồ câu</h2>
+                <form method="get" class="row g-3">
+                    <div class="col-12">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control") }}
+                    </div>
+                    <div class="col-12">
+                        {{ form.district_id.label(class="form-label") }}
+                        {{ form.district_id(class="form-select") }}
+                    </div>
+                    <div class="col-12">
+                        {{ form.address.label(class="form-label") }}
+                        {{ form.address(class="form-control") }}
+                    </div>
+                    <div class="col-12">
+                        {{ form.fishing_type.label(class="form-label") }}
+                        {{ form.fishing_type(class="form-control") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.min_price.label(class="form-label") }}
+                        {{ form.min_price(class="form-control") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.max_price.label(class="form-label") }}
+                        {{ form.max_price(class="form-control") }}
+                    </div>
+                    <div class="col-12 d-grid">
+                        <button class="btn btn-primary">{{ form.submit.label.text }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h1 class="h3 mb-1">Danh sách hồ câu</h1>
+                <p class="text-muted mb-0">{{ ponds|length }} kết quả phù hợp</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            {% for pond in ponds %}
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm pond-card">
+                        <img src="{{ pond.primary_image }}" class="card-img-top pond-image" alt="{{ pond.name }}">
+                        <div class="card-body">
+                            <h2 class="h5">{{ pond.name }}</h2>
+                            <p class="small text-muted mb-2">{{ pond.address }}</p>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge rounded-pill text-bg-light">{{ pond.district.name }}</span>
+                                <span class="badge rounded-pill text-bg-light">{{ pond.fishing_type }}</span>
+                                <span class="badge rounded-pill {% if pond.available_slots > 0 %}text-bg-success{% else %}text-bg-danger{% endif %}">
+                                    {% if pond.available_slots > 0 %}Còn chỗ{% else %}Hết chỗ{% endif %}
+                                </span>
+                            </div>
+                            <div class="small">
+                                <div>Giá vé: <strong>{{ "{:,.0f}".format(pond.price_per_slot) }} VND</strong></div>
+                                <div>Mở cửa: {{ pond.open_time }} - {{ pond.close_time }}</div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-0 pb-4">
+                            <a href="{{ url_for('main.pond_detail', pond_id=pond.id) }}" class="btn btn-outline-primary w-100">Xem chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-warning">Không tìm thấy hồ câu phù hợp bộ lọc.</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

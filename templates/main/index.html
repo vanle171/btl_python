@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Trang chủ{% endblock %}
+{% block content %}
+<section class="hero-banner p-4 p-lg-5 mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <span class="badge text-bg-warning mb-3">Nền tảng quản lý hồ câu tại Hà Nội</span>
+            <h1 class="display-5 fw-bold mb-3">Tìm nhanh hồ câu phù hợp, đặt chỗ trong vài phút</h1>
+            <p class="lead text-secondary mb-4">Hỗ trợ người câu cá, chủ hồ và quản trị viên quản lý danh sách hồ câu, đặt chỗ, doanh thu và tình trạng chỗ trống trên cùng một website.</p>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('main.pond_list') }}" class="btn btn-primary btn-lg">Khám phá hồ câu</a>
+                {% if not current_user.is_authenticated %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-dark btn-lg">Tạo tài khoản</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="hero-stats card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="mb-3">Quận/huyện được hỗ trợ</h5>
+                    <div class="district-grid">
+                        {% for district in districts[:12] %}
+                            <span class="district-pill">{{ district.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+        <h2 class="h3 mb-1">Hồ câu nổi bật</h2>
+        <p class="text-muted mb-0">Những địa điểm đã được duyệt và có thông tin đầy đủ.</p>
+    </div>
+    <a href="{{ url_for('main.pond_list') }}" class="btn btn-outline-primary">Xem tất cả</a>
+</section>
+
+<div id="react-pond-explorer"></div>
+
+<script id="featured-ponds-data" type="application/json">{{ featured_ponds_payload|tojson }}</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="{{ url_for('static', filename='js/react-home.js') }}"></script>
+{% endblock %}

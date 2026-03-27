@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Dashboard admin{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-3">
+        {% include "admin/sidebar.html" %}
+    </div>
+    <div class="col-lg-9">
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <span class="stat-label">Tổng hồ câu</span>
+                    <h2>{{ total_ponds }}</h2>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <span class="stat-label">Tổng người dùng</span>
+                    <h2>{{ total_users }}</h2>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <span class="stat-label">Tổng lượt đặt</span>
+                    <h2>{{ total_bookings }}</h2>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card">
+                    <span class="stat-label">Doanh thu hệ thống</span>
+                    <h2>{{ "{:,.0f}".format(total_revenue) }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-1">
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h1 class="h5 mb-0">Số hồ câu theo quận/huyện</h1>
+                            <a href="{{ url_for('admin.ponds') }}" class="btn btn-sm btn-outline-primary">Quản lý hồ câu</a>
+                        </div>
+                        <div class="list-group list-group-flush">
+                            {% for district_name, count in ponds_by_district %}
+                                <div class="list-group-item px-0 d-flex justify-content-between">
+                                    <span>{{ district_name }}</span>
+                                    <strong>{{ count }}</strong>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">Hồ câu đang chờ duyệt</h2>
+                        {% for pond in pending_ponds[:6] %}
+                            <div class="border-bottom pb-3 mb-3">
+                                <strong>{{ pond.name }}</strong>
+                                <div class="small text-muted">{{ pond.district.name }} - Chủ hồ: {{ pond.owner.full_name }}</div>
+                            </div>
+                        {% else %}
+                            <p class="text-muted mb-0">Không có hồ câu nào chờ duyệt.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

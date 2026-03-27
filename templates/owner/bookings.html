@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Quản lý đặt chỗ{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <h1 class="h4 mb-3">Danh sách đặt chỗ của khách</h1>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Khách hàng</th>
+                        <th>Hồ câu</th>
+                        <th>Ngày đặt</th>
+                        <th>Khung giờ</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                        <tr>
+                            <td>
+                                {{ booking.user.full_name }}
+                                <div class="small text-muted">{{ booking.user.phone }}</div>
+                            </td>
+                            <td>{{ booking.pond.name }}</td>
+                            <td>{{ booking.booking_date.strftime("%d/%m/%Y") }}</td>
+                            <td>{{ booking.start_time }}</td>
+                            <td>{{ "{:,.0f}".format(booking.total_price) }} VND</td>
+                            <td><span class="badge text-bg-light">{{ booking.status }}</span></td>
+                            <td class="text-end">
+                                <div class="d-flex gap-2 justify-content-end flex-wrap">
+                                    {% if booking.status == "pending" %}
+                                        <form method="post" action="{{ url_for('owner.confirm_booking', booking_id=booking.id) }}">
+                                            <button class="btn btn-sm btn-outline-success">Xác nhận</button>
+                                        </form>
+                                    {% endif %}
+                                    {% if booking.status in ["pending", "confirmed"] %}
+                                        <form method="post" action="{{ url_for('owner.cancel_booking', booking_id=booking.id) }}">
+                                            <button class="btn btn-sm btn-outline-danger">Hủy</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">Chưa có đơn đặt nào.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

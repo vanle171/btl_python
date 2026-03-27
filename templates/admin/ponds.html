@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Quản lý hồ câu{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-3">
+        {% include "admin/sidebar.html" %}
+    </div>
+    <div class="col-lg-9">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h1 class="h4 mb-1">Tất cả hồ câu</h1>
+                        <p class="text-muted mb-0">Duyệt hồ câu mới được chủ hồ đăng lên hệ thống.</p>
+                    </div>
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-outline-primary">Quản lý người dùng</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Tên hồ</th>
+                                <th>Chủ hồ</th>
+                                <th>Quận/huyện</th>
+                                <th>Giá vé</th>
+                                <th>Duyet</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pond in ponds %}
+                                <tr>
+                                    <td>{{ pond.name }}</td>
+                                    <td>{{ pond.owner.full_name }}</td>
+                                    <td>{{ pond.district.name }}</td>
+                                    <td>{{ "{:,.0f}".format(pond.price_per_slot) }} VND</td>
+                                    <td>
+                                        <span class="badge {% if pond.approved %}text-bg-success{% else %}text-bg-warning{% endif %}">
+                                            {% if pond.approved %}Đã duyệt{% else %}Chờ duyệt{% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <form method="post" action="{{ url_for('admin.toggle_approval', pond_id=pond.id) }}">
+                                            <button class="btn btn-sm btn-outline-dark">
+                                                {% if pond.approved %}Bỏ duyệt{% else %}Duyệt{% endif %}
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

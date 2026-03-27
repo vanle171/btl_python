@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Quản Lý Hồ Câu Hà Nội{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark main-navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('main.index') }}">Hồ Câu Hà Nội</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.index') }}">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.pond_list') }}">Danh sách hồ câu</a></li>
+                    {% if current_user.is_authenticated and current_user.is_owner %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('owner.dashboard') }}">Dashboard chủ hồ</a></li>
+                    {% endif %}
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}">Dashboard admin</a></li>
+                    {% endif %}
+                </ul>
+                <div class="d-flex align-items-center gap-2">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_customer %}
+                            <a class="btn btn-outline-light btn-sm" href="{{ url_for('main.booking_history') }}">Lịch sử đặt chỗ</a>
+                        {% endif %}
+                        <span class="text-white small">Xin chào, {{ current_user.full_name }}</span>
+                        <a class="btn btn-light btn-sm" href="{{ url_for('auth.logout') }}">Đăng xuất</a>
+                    {% else %}
+                        <a class="btn btn-outline-light btn-sm" href="{{ url_for('auth.login') }}">Đăng nhập</a>
+                        <a class="btn btn-warning btn-sm" href="{{ url_for('auth.register') }}">Đăng ký</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-shell">
+        <div class="container py-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="footer-section">
+        <div class="container d-flex flex-column flex-md-row justify-content-between gap-2 py-4">
+            <div>
+                <h6 class="mb-1">Hệ thống quản lý hồ câu Hà Nội</h6>
+                <p class="mb-0 small">Quản lý đặt chỗ, dịch vụ và thống kê doanh thu trên một nền tảng đơn giản.</p>
+            </div>
+            <div class="small text-md-end">
+                <div>Phát triển bằng Flask, SQLAlchemy, Bootstrap</div>
+                <div>&copy; {{ current_year }}</div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

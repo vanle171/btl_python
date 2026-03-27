@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Dashboard chủ hồ{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <span class="stat-label">Số hồ câu</span>
+            <h2>{{ ponds|length }}</h2>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <span class="stat-label">Đơn chờ xác nhận</span>
+            <h2>{{ pending_bookings|length }}</h2>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <span class="stat-label">Tổng doanh thu</span>
+            <h2>{{ "{:,.0f}".format(total_revenue) }}</h2>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <span class="stat-label">Tổng đơn</span>
+            <h2>{{ bookings|length }}</h2>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h1 class="h5 mb-0">Doanh thu theo tháng</h1>
+                    <a href="{{ url_for('owner.bookings') }}" class="btn btn-sm btn-outline-primary">Xem đặt chỗ</a>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for month in range(1, 13) %}
+                        <div class="list-group-item px-0 d-flex justify-content-between">
+                            <span>Tháng {{ month }}</span>
+                            <strong>{{ "{:,.0f}".format(monthly_revenue.get(month, 0)) }} VND</strong>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <h2 class="h5 mb-3">Tác vụ nhanh</h2>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('owner.create_pond') }}" class="btn btn-primary">Thêm hồ câu mới</a>
+                    <a href="{{ url_for('owner.pond_management') }}" class="btn btn-outline-primary">Quản lý hồ câu</a>
+                    <a href="{{ url_for('owner.bookings') }}" class="btn btn-outline-dark">Quản lý đặt chỗ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
