@@ -1,4 +1,5 @@
-from datetime import date, timedelta
+from datetime import date, time, timedelta
+import os
 
 from extensions import db
 from models import (
@@ -16,6 +17,21 @@ from models import (
     Service,
     User,
 )
+
+ADMIN_PASSWORD    = os.environ.get("SEED_ADMIN_PASSWORD",    "")
+OWNER_PASSWORD    = os.environ.get("SEED_OWNER_PASSWORD",    "")
+CUSTOMER_PASSWORD = os.environ.get("SEED_CUSTOMER_PASSWORD", "")
+
+
+def _parse(s):
+    parts = s.split(":")
+    return time(int(parts[0]), int(parts[1]))
+
+
+def _end_from_start(start_time_val, offset_hours=1):
+    """add offset_hours to a time object, wrapping past midnight."""
+    total_minutes = start_time_val.hour * 60 + start_time_val.minute + offset_hours * 60
+    return time((total_minutes // 60) % 24, total_minutes % 60)
 
 
 DISTRICTS = [
@@ -56,6 +72,12 @@ DEFAULT_FISH_TYPES = [
 
 def seed_data():
     if Role.query.first():
+        #? backfill end_time for existing bookings
+        for b in Booking.query.filter(Booking.end_time.is_(None)).all():
+            st = b.start_time 
+            b.end_time = _end_from_start(st)
+        db.session.commit()
+        #? backfill missing fish types on re-runs
         existing_fish_names = {item.name for item in FishType.query.all()}
         missing_fish_types = [
             FishType(name=name, description=description)
@@ -95,7 +117,7 @@ def seed_data():
         phone="0900000000",
         role=roles["admin"],
     )
-    admin.set_password("admin123")
+    admin.set_password(ADMIN_PASSWORD)
 
     owner_1 = User(
         full_name="Nguyen Van Chu Ho",
@@ -104,7 +126,7 @@ def seed_data():
         phone="0911111111",
         role=roles["owner"],
     )
-    owner_1.set_password("owner123")
+    owner_1.set_password(OWNER_PASSWORD)
 
     owner_2 = User(
         full_name="Tran Thi Chu Ho",
@@ -113,7 +135,7 @@ def seed_data():
         phone="0922222222",
         role=roles["owner"],
     )
-    owner_2.set_password("owner123")
+    owner_2.set_password(OWNER_PASSWORD)
 
     customer = User(
         full_name="Le Van Nguoi Dung",
@@ -122,7 +144,7 @@ def seed_data():
         phone="0933333333",
         role=roles["customer"],
     )
-    customer.set_password("user123")
+    customer.set_password(CUSTOMER_PASSWORD)
 
     db.session.add_all([admin, owner_1, owner_2, customer])
     db.session.flush()
@@ -236,11 +258,13 @@ def seed_data():
         ]
     )
 
+    booking_start = time(7, 0)
     booking = Booking(
         user=customer,
         pond=ponds[0],
         booking_date=date.today() + timedelta(days=3),
-        start_time="07:00",
+        start_time=booking_start,
+        end_time=time(8, 0),
         slot_count=2,
         unit_price=ponds[0].price_per_slot,
         total_price=ponds[0].price_per_slot * 2,
@@ -259,8 +283,8 @@ def seed_data():
     )
     db.session.add_all(
         [
-            Review(user=customer, pond=ponds[0], rating=5, comment="Ho sach dep, nhan vien ho tro nhanh."),
-            Review(user=customer, pond=ponds[1], rating=4, comment="Dich vu on, bai gui xe tien loi."),
+            Review(user=customer, pond=ponds[0], rating=5, comment="Ho sach dep, nhan vien ho tro nhanh.", status="approved"),
+            Review(user=customer, pond=ponds[1], rating=4, comment="Dich vu on, bai gui xe tien loi.", status="approved"),
         ]
     )
     db.session.add_all(
@@ -271,8 +295,8 @@ def seed_data():
                 booking=booking,
                 customer_name="Lê Văn Người Dùng",
                 activity_date=date.today(),
-                start_time="06:30",
-                duration_hours=4,
+                start_time=time(6, 30),
+                end_time=time(10, 30),
                 catch_weight=3.5,
                 note="Buổi câu sáng cuối tuần.",
             ),
@@ -281,8 +305,8 @@ def seed_data():
                 fish_type=fish_type_map["Cá mè"],
                 customer_name="Nguyễn Văn An",
                 activity_date=date.today(),
-                start_time="08:00",
-                duration_hours=3,
+                start_time=time(8, 0),
+                end_time=time(11, 0),
                 catch_weight=2.1,
                 note="Khách quen của hồ.",
             ),
@@ -291,8 +315,8 @@ def seed_data():
                 fish_type=fish_type_map["Cá rô phi"],
                 customer_name="Trần Minh Khoa",
                 activity_date=date.today() - timedelta(days=1),
-                start_time="07:15",
-                duration_hours=5,
+                start_time=time(7, 15),
+                end_time=time(12, 15),
                 catch_weight=4.2,
                 note="Hoạt động nhóm 2 người.",
             ),

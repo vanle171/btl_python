@@ -39,6 +39,28 @@ BTL_python/
 
 ## Huong dan chay
 
+### Cach 1: uv (khuyen dung)
+
+depending on machine types, https://docs.astral.sh/uv/getting-started/installation
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+or
+
+pip install uv
+```
+
+```bash
+uv sync
+```
+
+```bash
+uv run python app.py
+```
+
+### Cach 2: venv thu cong
+
 1. Tao moi truong ao:
 
 ```bash
@@ -71,6 +93,6 @@ http://127.0.0.1:5000
 
 ## Ghi chu
 
-- SQLite se duoc tao trong `instance/fishing_ponds.db`.
+- SQLite se duoc tao trong `instance/database.db`.
 - Seed du lieu mau tu dong chay o lan khoi dong dau tien.
 - Muon reset du lieu, xoa file database roi chay lai `python app.py`.

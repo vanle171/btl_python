@@ -190,13 +190,17 @@ class Booking(TimestampMixin, db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     pond_id = db.Column(db.Integer, db.ForeignKey("fishing_ponds.id"), nullable=False)
     booking_date = db.Column(db.Date, nullable=False)
-    start_time = db.Column(db.String(20), nullable=False)
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
     slot_count = db.Column(db.Integer, nullable=False, default=1)
     unit_price = db.Column(db.Float, nullable=False, default=0)
     total_price = db.Column(db.Float, nullable=False, default=0)
     status = db.Column(db.String(30), default="pending", nullable=False)
     note = db.Column(db.Text)
     confirmed_at = db.Column(db.DateTime)
+
+    def time_display(self):
+        return f"{self.start_time.strftime('%H:%M')} - {self.end_time.strftime('%H:%M')}"
 
     user = db.relationship("User", back_populates="bookings")
     pond = db.relationship("FishingPond", back_populates="bookings")
@@ -205,6 +209,9 @@ class Booking(TimestampMixin, db.Model):
     )
     activities = db.relationship(
         "FishingActivity", back_populates="booking", cascade="all, delete-orphan", lazy=True
+    )
+    reviews = db.relationship(
+        "Review", back_populates="booking", cascade="all, delete-orphan", lazy=True
     )
 
     @property
@@ -232,12 +239,14 @@ class Review(TimestampMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     pond_id = db.Column(db.Integer, db.ForeignKey("fishing_ponds.id"), nullable=False)
+    booking_id = db.Column(db.Integer, db.ForeignKey("bookings.id"), nullable=True)
     rating = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.Text)
-    status = db.Column(db.String(30), default="approved", nullable=False)
+    status = db.Column(db.String(30), default="pending", nullable=False)
 
     user = db.relationship("User", back_populates="reviews")
     pond = db.relationship("FishingPond", back_populates="reviews")
+    booking = db.relationship("Booking", back_populates="reviews")
 
 
 class Image(TimestampMixin, db.Model):
@@ -260,8 +269,8 @@ class FishingActivity(TimestampMixin, db.Model):
     booking_id = db.Column(db.Integer, db.ForeignKey("bookings.id"))
     customer_name = db.Column(db.String(120), nullable=False)
     activity_date = db.Column(db.Date, nullable=False)
-    start_time = db.Column(db.String(20), nullable=False)
-    duration_hours = db.Column(db.Integer, default=1, nullable=False)
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
     catch_weight = db.Column(db.Float, default=0, nullable=False)
     note = db.Column(db.Text)
     status = db.Column(db.String(30), default="completed", nullable=False)

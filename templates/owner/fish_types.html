@@ -32,6 +32,7 @@
                                 <div class="d-flex justify-content-end gap-2">
                                     <a href="{{ url_for('owner.edit_fish_type', row_id=row.id) }}" class="btn btn-sm btn-outline-primary">Sửa</a>
                                     <form method="post" action="{{ url_for('owner.delete_fish_type', row_id=row.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button class="btn btn-sm btn-outline-danger">Xóa</button>
                                     </form>
                                 </div>
