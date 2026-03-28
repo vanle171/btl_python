@@ -1,12 +1,14 @@
-from datetime import datetime
+import csv
+from datetime import date, datetime, timedelta
 from functools import wraps
+from io import StringIO
 
-from flask import Blueprint, abort, flash, redirect, render_template, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, url_for, Response
 from flask_login import current_user, login_required
 from sqlalchemy import extract, func
 
 from extensions import db
-from forms import FishingActivityForm, PondFishTypeForm, PondForm, PondServiceForm
+from forms import FishingActivityForm, PondFishTypeForm, PondForm, PondServiceForm, PromotionForm
 from models import (
     Booking,
     District,
@@ -16,6 +18,7 @@ from models import (
     Image,
     PondFishType,
     PondService,
+    Promotion,
     Service,
 )
 
@@ -55,6 +58,27 @@ def _fish_type_choices():
     return [(fish_type.id, fish_type.name) for fish_type in fish_types]
 
 
+def _period_range(period):
+    today = date.today()
+    if period == "day":
+        start_date = today
+        end_date = today
+        label = f"Ngày {today.strftime('%d/%m/%Y')}"
+    elif period == "week":
+        start_date = today - timedelta(days=today.weekday())
+        end_date = start_date + timedelta(days=6)
+        label = f"Tuần {start_date.strftime('%d/%m')} - {end_date.strftime('%d/%m/%Y')}"
+    else:
+        start_date = today.replace(day=1)
+        if start_date.month == 12:
+            next_month = start_date.replace(year=start_date.year + 1, month=1, day=1)
+        else:
+            next_month = start_date.replace(month=start_date.month + 1, day=1)
+        end_date = next_month - timedelta(days=1)
+        label = f"Tháng {start_date.strftime('%m/%Y')}"
+    return start_date, end_date, label
+
+
 @owner_bp.route("/dashboard")
 @owner_required
 def dashboard():
@@ -77,6 +101,10 @@ def dashboard():
         {"pond_name": pond.name, "activity_count": len(pond.fishing_activities)}
         for pond in ponds
     ]
+    pond_chart_labels = [item["pond_name"] for item in pond_activity_summary]
+    pond_chart_values = [item["activity_count"] for item in pond_activity_summary]
+    fish_chart_labels = list(fish_type_summary.keys())
+    fish_chart_values = list(fish_type_summary.values())
 
     current_year = datetime.utcnow().year
     monthly_rows = (
@@ -103,7 +131,170 @@ def dashboard():
         total_fish_types=total_fish_types,
         fish_type_summary=fish_type_summary,
         pond_activity_summary=pond_activity_summary,
+        pond_chart_labels=pond_chart_labels,
+        pond_chart_values=pond_chart_values,
+        fish_chart_labels=fish_chart_labels,
+        fish_chart_values=fish_chart_values,
         monthly_revenue=monthly_revenue,
+    )
+
+
+@owner_bp.route("/reports")
+@owner_required
+def reports():
+    period = request.args.get("period", "month")
+    if period not in {"day", "week", "month"}:
+        period = "month"
+
+    selected_pond_id = request.args.get("pond_id", type=int)
+    start_date_param = request.args.get("start_date", "").strip()
+    end_date_param = request.args.get("end_date", "").strip()
+    ponds = FishingPond.query.filter_by(owner_id=current_user.id).order_by(FishingPond.name.asc()).all()
+    pond_choices = [(0, "Tất cả hồ câu")] + [(pond.id, pond.name) for pond in ponds]
+    pond_ids = [pond.id for pond in ponds]
+    if selected_pond_id and selected_pond_id in pond_ids:
+        pond_ids = [selected_pond_id]
+    else:
+        selected_pond_id = 0
+
+    if start_date_param and end_date_param:
+        try:
+            start_date = datetime.strptime(start_date_param, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end_date_param, "%Y-%m-%d").date()
+            if start_date > end_date:
+                start_date, end_date = end_date, start_date
+            period_label = f"Từ {start_date.strftime('%d/%m/%Y')} đến {end_date.strftime('%d/%m/%Y')}"
+        except ValueError:
+            start_date, end_date, period_label = _period_range(period)
+            start_date_param = start_date.strftime("%Y-%m-%d")
+            end_date_param = end_date.strftime("%Y-%m-%d")
+    else:
+        start_date, end_date, period_label = _period_range(period)
+        start_date_param = start_date.strftime("%Y-%m-%d")
+        end_date_param = end_date.strftime("%Y-%m-%d")
+
+    bookings = (
+        Booking.query.filter(
+            Booking.pond_id.in_(pond_ids),
+            Booking.booking_date >= start_date,
+            Booking.booking_date <= end_date,
+        ).all()
+        if pond_ids
+        else []
+    )
+    activities = (
+        FishingActivity.query.filter(
+            FishingActivity.pond_id.in_(pond_ids),
+            FishingActivity.activity_date >= start_date,
+            FishingActivity.activity_date <= end_date,
+        ).all()
+        if pond_ids
+        else []
+    )
+
+    rows = []
+    total_revenue = 0
+    total_bookings = 0
+    total_activities = 0
+    active_ponds = 0
+
+    pond_map = {pond.id: pond for pond in ponds if pond.id in pond_ids}
+    for pond_id in pond_ids:
+        pond = pond_map.get(pond_id)
+        if not pond:
+            continue
+        pond_bookings = [item for item in bookings if item.pond_id == pond_id]
+        pond_activities = [item for item in activities if item.pond_id == pond_id]
+        revenue = sum(item.total_price for item in pond_bookings if item.status == "confirmed")
+        booking_count = len(pond_bookings)
+        activity_count = len(pond_activities)
+        if booking_count or activity_count or revenue:
+            active_ponds += 1
+        total_revenue += revenue
+        total_bookings += booking_count
+        total_activities += activity_count
+        rows.append(
+            {
+                "pond_name": pond.name,
+                "revenue": revenue,
+                "booking_count": booking_count,
+                "activity_count": activity_count,
+            }
+        )
+
+    rows.sort(key=lambda item: (item["revenue"], item["booking_count"], item["activity_count"]), reverse=True)
+
+    chart_labels = [item["pond_name"] for item in rows]
+    revenue_values = [item["revenue"] for item in rows]
+    booking_values = [item["booking_count"] for item in rows]
+    activity_values = [item["activity_count"] for item in rows]
+
+    timeline_labels = []
+    revenue_timeline = []
+    booking_timeline = []
+    activity_timeline = []
+
+    if period == "day":
+        timeline_points = [start_date]
+        timeline_labels = [start_date.strftime("%d/%m")]
+    elif period == "week":
+        timeline_points = [start_date + timedelta(days=offset) for offset in range(7)]
+        timeline_labels = [point.strftime("%a %d/%m") for point in timeline_points]
+    else:
+        timeline_points = []
+        cursor = start_date
+        while cursor <= end_date:
+            timeline_points.append(cursor)
+            cursor += timedelta(days=1)
+        timeline_labels = [point.strftime("%d/%m") for point in timeline_points]
+
+    for point in timeline_points:
+        point_bookings = [item for item in bookings if item.booking_date == point]
+        point_activities = [item for item in activities if item.activity_date == point]
+        revenue_timeline.append(sum(item.total_price for item in point_bookings if item.status == "confirmed"))
+        booking_timeline.append(len(point_bookings))
+        activity_timeline.append(len(point_activities))
+
+    export_mode = request.args.get("export")
+    if export_mode == "csv":
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Bao cao", period_label])
+        writer.writerow(["Ho cau", "Doanh thu", "Luot dat", "Luot hoat dong"])
+        for row in rows:
+            writer.writerow([row["pond_name"], row["revenue"], row["booking_count"], row["activity_count"]])
+        writer.writerow([])
+        writer.writerow(["Tong doanh thu", total_revenue])
+        writer.writerow(["Tong luot dat", total_bookings])
+        writer.writerow(["Tong luot hoat dong", total_activities])
+        filename = f"bao_cao_{period}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+
+    return render_template(
+        "owner/reports.html",
+        period=period,
+        period_label=period_label,
+        selected_pond_id=selected_pond_id,
+        start_date_param=start_date_param,
+        end_date_param=end_date_param,
+        pond_choices=pond_choices,
+        rows=rows,
+        total_revenue=total_revenue,
+        total_bookings=total_bookings,
+        total_activities=total_activities,
+        active_ponds=active_ponds,
+        chart_labels=chart_labels,
+        revenue_values=revenue_values,
+        booking_values=booking_values,
+        activity_values=activity_values,
+        timeline_labels=timeline_labels,
+        revenue_timeline=revenue_timeline,
+        booking_timeline=booking_timeline,
+        activity_timeline=activity_timeline,
     )
 
 
@@ -133,9 +324,9 @@ def create_pond():
             price_per_slot=form.price_per_slot.data,
             total_slots=form.total_slots.data,
             available_slots=min(form.available_slots.data, form.total_slots.data),
+            status=form.status.data,
             featured=form.featured.data,
             approved=False,
-            status="open",
         )
         db.session.add(pond)
         db.session.flush()
@@ -168,6 +359,7 @@ def edit_pond(pond_id):
         pond.price_per_slot = form.price_per_slot.data
         pond.total_slots = form.total_slots.data
         pond.available_slots = min(form.available_slots.data, form.total_slots.data)
+        pond.status = form.status.data
         pond.featured = form.featured.data
         if form.image_url.data:
             primary = next((image for image in pond.images if image.is_primary), None)
@@ -230,6 +422,85 @@ def manage_services(pond_id):
 
     form.service_ids.data = [item.service_id for item in pond.services]
     return render_template("owner/service_form.html", form=form, pond=pond)
+
+
+@owner_bp.route("/promotions")
+@owner_required
+def promotions():
+    pond_ids = [pond.id for pond in FishingPond.query.filter_by(owner_id=current_user.id).all()]
+    items = (
+        Promotion.query.filter(Promotion.pond_id.in_(pond_ids))
+        .order_by(Promotion.created_at.desc())
+        .all()
+        if pond_ids
+        else []
+    )
+    return render_template("owner/promotions.html", promotions=items)
+
+
+@owner_bp.route("/promotions/create", methods=["GET", "POST"])
+@owner_required
+def create_promotion():
+    form = PromotionForm()
+    form.pond_id.choices = _owner_pond_choices()
+    if not form.pond_id.choices:
+        flash("Bạn cần tạo hồ câu trước khi thêm khuyến mãi.", "warning")
+        return redirect(url_for("owner.pond_management"))
+    if form.validate_on_submit():
+        pond = FishingPond.query.get_or_404(form.pond_id.data)
+        if pond.owner_id != current_user.id:
+            abort(403)
+        db.session.add(
+            Promotion(
+                pond_id=pond.id,
+                title=form.title.data,
+                description=form.description.data,
+                discount_percent=form.discount_percent.data,
+                start_date=form.start_date.data,
+                end_date=form.end_date.data,
+                is_active=True,
+            )
+        )
+        db.session.commit()
+        flash("Đã tạo khuyến mãi mới.", "success")
+        return redirect(url_for("owner.promotions"))
+    return render_template("owner/promotion_form.html", form=form, title="Thêm khuyến mãi")
+
+
+@owner_bp.route("/promotions/<int:promotion_id>/edit", methods=["GET", "POST"])
+@owner_required
+def edit_promotion(promotion_id):
+    promotion = Promotion.query.get_or_404(promotion_id)
+    if promotion.pond.owner_id != current_user.id:
+        abort(403)
+    form = PromotionForm(obj=promotion)
+    form.pond_id.choices = _owner_pond_choices()
+    if form.validate_on_submit():
+        pond = FishingPond.query.get_or_404(form.pond_id.data)
+        if pond.owner_id != current_user.id:
+            abort(403)
+        promotion.pond_id = pond.id
+        promotion.title = form.title.data
+        promotion.description = form.description.data
+        promotion.discount_percent = form.discount_percent.data
+        promotion.start_date = form.start_date.data
+        promotion.end_date = form.end_date.data
+        db.session.commit()
+        flash("Đã cập nhật khuyến mãi.", "success")
+        return redirect(url_for("owner.promotions"))
+    return render_template("owner/promotion_form.html", form=form, title="Cập nhật khuyến mãi")
+
+
+@owner_bp.route("/promotions/<int:promotion_id>/delete", methods=["POST"])
+@owner_required
+def delete_promotion(promotion_id):
+    promotion = Promotion.query.get_or_404(promotion_id)
+    if promotion.pond.owner_id != current_user.id:
+        abort(403)
+    db.session.delete(promotion)
+    db.session.commit()
+    flash("Đã xóa khuyến mãi.", "info")
+    return redirect(url_for("owner.promotions"))
 
 
 @owner_bp.route("/fish-types")

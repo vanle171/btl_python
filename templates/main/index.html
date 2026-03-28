@@ -6,10 +6,10 @@
         <div class="col-lg-7">
             <div class="hero-copy">
                 <span class="hero-kicker">Nền tảng quản lý hồ câu tại Hà Nội</span>
-                <h1 class="hero-title">Tìm hồ câu phù hợp, đặt chỗ nhanh và quản lý tập trung trên một website duy nhất.</h1>
+                <h1 class="hero-title">Tìm hồ câu phù hợp, đặt chỗ nhanh và theo dõi ưu đãi trên một website duy nhất.</h1>
                 <p class="hero-description">
-                    Dành cho người dùng, chủ hồ câu và quản trị viên. Mọi thông tin về địa điểm, khung giờ, giá vé,
-                    dịch vụ đi kèm và doanh thu đều được hiển thị rõ ràng, hiện đại và dễ dùng.
+                    Dành cho người dùng, chủ hồ và quản trị viên. Website hỗ trợ tìm hồ câu, xem lịch tuần,
+                    nhận khuyến mãi, đánh giá chất lượng và quản lý hoạt động tập trung.
                 </p>
                 <div class="d-flex flex-wrap gap-3">
                     <a href="{{ url_for('main.pond_list') }}" class="btn btn-primary btn-lg px-4">Khám phá hồ câu</a>
@@ -31,47 +31,56 @@
                         {% endfor %}
                     </div>
                 </div>
-                <div class="hero-metrics">
-                    <div class="hero-metric-box">
-                        <span>Loại tài khoản</span>
-                        <strong>3 nhóm</strong>
-                    </div>
-                    <div class="hero-metric-box">
-                        <span>Khả năng mở rộng</span>
-                        <strong>Dễ triển khai</strong>
-                    </div>
-                    <div class="hero-metric-box">
-                        <span>Trải nghiệm</span>
-                        <strong>Desktop + Mobile</strong>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="feature-strip">
-    <div class="feature-strip__item">
-        <span class="feature-strip__eyebrow">Người dùng</span>
-        <strong>Tìm kiếm theo tên, quận huyện, địa chỉ, loại câu, giá vé</strong>
+<section class="section-heading">
+    <div>
+        <span class="section-heading__kicker">Xếp hạng nổi bật</span>
+        <h2 class="section-heading__title">Top hồ câu được quan tâm</h2>
+        <p class="section-heading__desc">Sắp xếp theo lượt đặt thành công, hoạt động câu và điểm đánh giá trung bình.</p>
     </div>
-    <div class="feature-strip__item">
-        <span class="feature-strip__eyebrow">Chủ hồ</span>
-        <strong>Quản lý hồ câu, dịch vụ, chỗ trống và danh sách khách đã đặt</strong>
-    </div>
-    <div class="feature-strip__item">
-        <span class="feature-strip__eyebrow">Quản trị</span>
-        <strong>Duyệt hồ mới, thống kê hệ thống và khóa mở tài khoản</strong>
-    </div>
+    <a href="{{ url_for('main.pond_list') }}" class="btn btn-outline-primary px-4">Xem tất cả</a>
 </section>
+
+<div class="row g-4 mb-5">
+    {% for pond in top_ponds %}
+        <div class="col-md-6 col-xl-4">
+            <div class="card h-100 border-0 shadow-sm pond-card">
+                <img src="{{ pond.primary_image }}" class="card-img-top pond-image" alt="{{ pond.name }}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <h3 class="h5 mb-1">{{ pond.name }}</h3>
+                        <span class="badge text-bg-warning">Top</span>
+                    </div>
+                    <p class="text-muted small mb-2">{{ pond.address }}</p>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge rounded-pill text-bg-light">{{ pond.district.name }}</span>
+                        <span class="badge rounded-pill text-bg-light">{{ pond.average_rating }}/5 sao</span>
+                        <span class="badge rounded-pill text-bg-light">{{ pond.bookings|length }} lượt đặt</span>
+                    </div>
+                    <p class="mb-0 small text-muted">Hoạt động câu: {{ pond.fishing_activities|length }} lượt</p>
+                </div>
+                <div class="card-footer bg-white border-0 pb-4">
+                    <a href="{{ url_for('main.pond_detail', pond_id=pond.id) }}" class="btn btn-primary w-100">Xem chi tiết</a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">Chưa có hồ câu nổi bật trong hệ thống.</div>
+        </div>
+    {% endfor %}
+</div>
 
 <section class="section-heading">
     <div>
         <span class="section-heading__kicker">Khám phá nhanh</span>
-        <h2 class="section-heading__title">Hồ câu nổi bật</h2>
-        <p class="section-heading__desc">Những địa điểm đã được duyệt với đầy đủ thông tin để người dùng tra cứu và đặt chỗ.</p>
+        <h2 class="section-heading__title">Hồ câu đề xuất</h2>
+        <p class="section-heading__desc">Lọc nhanh các hồ câu nổi bật bằng giao diện React tương tác.</p>
     </div>
-    <a href="{{ url_for('main.pond_list') }}" class="btn btn-outline-primary px-4">Xem tất cả</a>
 </section>
 
 <div id="react-pond-explorer"></div>

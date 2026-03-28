@@ -80,6 +80,12 @@ class PondForm(FlaskForm):
     price_per_slot = FloatField("Giá vé", validators=[DataRequired(), NumberRange(min=0)])
     total_slots = IntegerField("Tổng số chỗ", validators=[DataRequired(), NumberRange(min=1)])
     available_slots = IntegerField("Chỗ còn trống", validators=[DataRequired(), NumberRange(min=0)])
+    status = SelectField(
+        "Trạng thái hoạt động",
+        choices=[("open", "Đang hoạt động"), ("closed", "Ngừng hoạt động")],
+        validators=[DataRequired()],
+        default="open",
+    )
     featured = BooleanField("Hồ nổi bật")
     image_url = StringField("Ảnh đại diện (URL)", validators=[Optional(), Length(max=500)])
     submit = SubmitField("Lưu")
@@ -108,6 +114,31 @@ class FishingActivityForm(FlaskForm):
     catch_weight = FloatField("Khối lượng cá câu được (kg)", validators=[Optional(), NumberRange(min=0)])
     note = TextAreaField("Ghi chú", validators=[Optional(), Length(max=1000)])
     submit = SubmitField("Lưu hoạt động")
+
+
+class ReviewForm(FlaskForm):
+    rating = SelectField(
+        "Đánh giá sao",
+        coerce=int,
+        choices=[(5, "5 sao"), (4, "4 sao"), (3, "3 sao"), (2, "2 sao"), (1, "1 sao")],
+        validators=[DataRequired()],
+    )
+    comment = TextAreaField("Bình luận", validators=[DataRequired(), Length(max=1000)])
+    submit = SubmitField("Gửi đánh giá")
+
+
+class PromotionForm(FlaskForm):
+    pond_id = SelectField("Hồ câu", coerce=int, validators=[DataRequired()])
+    title = StringField("Tiêu đề khuyến mãi", validators=[DataRequired(), Length(max=150)])
+    description = TextAreaField("Mô tả", validators=[Optional(), Length(max=1000)])
+    discount_percent = FloatField("Giảm giá (%)", validators=[DataRequired(), NumberRange(min=0, max=100)])
+    start_date = DateField("Ngày bắt đầu", validators=[DataRequired()], default=date.today)
+    end_date = DateField("Ngày kết thúc", validators=[DataRequired()], default=date.today)
+    submit = SubmitField("Lưu khuyến mãi")
+
+    def validate_end_date(self, field):
+        if self.start_date.data and field.data < self.start_date.data:
+            raise ValidationError("Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.")
 
 
 class BookingForm(FlaskForm):

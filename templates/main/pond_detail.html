@@ -4,12 +4,12 @@
 <div class="row g-4">
     <div class="col-lg-8">
         <img src="{{ pond.primary_image }}" class="detail-image rounded-4 shadow-sm mb-4" alt="{{ pond.name }}">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
                     <div>
                         <h1 class="h2 mb-1">{{ pond.name }}</h1>
-                        <p class="text-muted mb-0">{{ pond.address }}, {{ pond.district.name }}, Ha Noi</p>
+                        <p class="text-muted mb-0">{{ pond.address }}, {{ pond.district.name }}, Hà Nội</p>
                     </div>
                     <span class="badge {% if pond.available_slots > 0 %}text-bg-success{% else %}text-bg-danger{% endif %}">
                         {% if pond.available_slots > 0 %}Còn chỗ{% else %}Hết chỗ{% endif %}
@@ -24,23 +24,89 @@
                     <div class="col-md-6"><strong>Chỗ trống:</strong> {{ pond.available_slots }} / {{ pond.total_slots }}</div>
                     <div class="col-md-6"><strong>Đánh giá:</strong> {{ pond.average_rating }}/5</div>
                 </div>
-                <hr>
-                <h2 class="h5 mb-3">Dịch vụ đi kèm</h2>
-                <div class="row g-3">
-                    {% for item in pond.services %}
-                        <div class="col-md-6">
-                            <div class="service-item">
-                                <strong>{{ item.service.name }}</strong>
-                                <div class="small text-muted">{{ item.service.description }}</div>
-                                <div class="small">{{ "{:,.0f}".format(item.custom_price) }} VND</div>
+                {% if active_promotions %}
+                    <hr>
+                    <h2 class="h5 mb-3">Khuyến mãi đang áp dụng</h2>
+                    <div class="row g-3">
+                        {% for promotion in active_promotions %}
+                            <div class="col-md-6">
+                                <div class="service-item">
+                                    <strong>{{ promotion.title }}</strong>
+                                    <div class="small text-muted">{{ promotion.description }}</div>
+                                    <div class="small">Giảm {{ promotion.discount_percent }}% đến {{ promotion.end_date.strftime("%d/%m/%Y") }}</div>
+                                </div>
                             </div>
-                        </div>
-                    {% else %}
-                        <div class="col-12">
-                            <p class="text-muted mb-0">Hồ câu chưa khai báo dịch vụ đi kèm.</p>
-                        </div>
-                    {% endfor %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h2 class="h5 mb-3">Lịch đặt chỗ theo tuần</h2>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th>Đã đặt</th>
+                                <th>Còn trống</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in weekly_schedule %}
+                                <tr>
+                                    <td>{{ item.date.strftime("%d/%m/%Y") }}</td>
+                                    <td>{{ item.booked_slots }}</td>
+                                    <td>{{ item.remain_slots }}</td>
+                                    <td>
+                                        <span class="badge {% if item.is_full %}text-bg-danger{% else %}text-bg-success{% endif %}">
+                                            {% if item.is_full %}Kín chỗ{% else %}Còn nhận đặt{% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Đánh giá và bình luận</h2>
+                    <span class="text-muted small">{{ reviews|length }} đánh giá</span>
+                </div>
+                {% if current_user.is_authenticated and current_user.is_customer %}
+                    <form method="post" action="{{ url_for('main.submit_review', pond_id=pond.id) }}" class="row g-3 mb-4">
+                        {{ review_form.hidden_tag() }}
+                        <div class="col-md-3">
+                            {{ review_form.rating.label(class="form-label") }}
+                            {{ review_form.rating(class="form-select") }}
+                        </div>
+                        <div class="col-md-9">
+                            {{ review_form.comment.label(class="form-label") }}
+                            {{ review_form.comment(class="form-control", rows="3") }}
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-primary">{{ review_form.submit.label.text }}</button>
+                        </div>
+                    </form>
+                {% endif %}
+                {% for review in reviews %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ review.user.full_name }}</strong>
+                            <span>{{ review.rating }}/5</span>
+                        </div>
+                        <p class="mb-0 small text-muted">{{ review.comment }}</p>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">Chưa có đánh giá nào.</p>
+                {% endfor %}
             </div>
         </div>
     </div>
@@ -48,7 +114,7 @@
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
                 <h2 class="h5">Đặt chỗ nhanh</h2>
-                <p class="text-muted">Kiểm tra chỗ trống và đặt chỗ theo ngày mong muốn.</p>
+                <p class="text-muted">Kiểm tra lịch tuần và nhận ưu đãi trước khi đặt chỗ.</p>
                 {% if current_user.is_authenticated and current_user.is_customer %}
                     <a href="{{ url_for('main.create_booking', pond_id=pond.id) }}" class="btn btn-primary w-100">Đặt chỗ ngay</a>
                 {% elif not current_user.is_authenticated %}
@@ -60,18 +126,20 @@
         </div>
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
-                <h2 class="h5">Đánh giá gần đây</h2>
-                {% for review in reviews[:4] %}
-                    <div class="border-bottom pb-3 mb-3">
-                        <div class="d-flex justify-content-between">
-                            <strong>{{ review.user.full_name }}</strong>
-                            <span>{{ review.rating }}/5</span>
+                <h2 class="h5 mb-3">Dịch vụ đi kèm</h2>
+                <div class="row g-3">
+                    {% for item in pond.services %}
+                        <div class="col-12">
+                            <div class="service-item">
+                                <strong>{{ item.service.name }}</strong>
+                                <div class="small text-muted">{{ item.service.description }}</div>
+                                <div class="small">{{ "{:,.0f}".format(item.custom_price) }} VND</div>
+                            </div>
                         </div>
-                        <p class="mb-0 small text-muted">{{ review.comment }}</p>
-                    </div>
-                {% else %}
-                    <p class="text-muted mb-0">Chưa có đánh giá nào.</p>
-                {% endfor %}
+                    {% else %}
+                        <p class="text-muted mb-0">Hồ câu chưa khai báo dịch vụ đi kèm.</p>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>

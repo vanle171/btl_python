@@ -37,6 +37,8 @@
                     <a href="{{ url_for('owner.create_pond') }}" class="btn btn-primary">Thêm hồ câu mới</a>
                     <a href="{{ url_for('owner.fish_types') }}" class="btn btn-outline-primary">Quản lý loại cá</a>
                     <a href="{{ url_for('owner.activities') }}" class="btn btn-outline-primary">Quản lý hoạt động câu</a>
+                    <a href="{{ url_for('owner.promotions') }}" class="btn btn-outline-primary">Quản lý khuyến mãi</a>
+                    <a href="{{ url_for('owner.reports') }}" class="btn btn-outline-primary">Báo cáo doanh thu</a>
                     <a href="{{ url_for('owner.bookings') }}" class="btn btn-outline-dark">Quản lý đặt chỗ</a>
                 </div>
             </div>
@@ -57,6 +59,31 @@
                         </div>
                     {% endfor %}
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Biểu đồ cột theo hồ câu</h2>
+                    <span class="text-muted small">Số lượt hoạt động câu</span>
+                </div>
+                <canvas id="pondBarChart" height="240"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Biểu đồ tròn loại cá</h2>
+                    <span class="text-muted small">Tỷ trọng số lượng cá</span>
+                </div>
+                <canvas id="fishPieChart" height="240"></canvas>
             </div>
         </div>
     </div>
@@ -98,4 +125,73 @@
         </div>
     </div>
 </div>
+
+<script id="pond-chart-labels" type="application/json">{{ pond_chart_labels|tojson }}</script>
+<script id="pond-chart-values" type="application/json">{{ pond_chart_values|tojson }}</script>
+<script id="fish-chart-labels" type="application/json">{{ fish_chart_labels|tojson }}</script>
+<script id="fish-chart-values" type="application/json">{{ fish_chart_values|tojson }}</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const pondLabels = JSON.parse(document.getElementById("pond-chart-labels").textContent || "[]");
+    const pondValues = JSON.parse(document.getElementById("pond-chart-values").textContent || "[]");
+    const fishLabels = JSON.parse(document.getElementById("fish-chart-labels").textContent || "[]");
+    const fishValues = JSON.parse(document.getElementById("fish-chart-values").textContent || "[]");
+
+    const chartPalette = ["#0f766e", "#164e63", "#f59e0b", "#2563eb", "#ef4444", "#8b5cf6"];
+
+    const pondCtx = document.getElementById("pondBarChart");
+    if (pondCtx) {
+        new Chart(pondCtx, {
+            type: "bar",
+            data: {
+                labels: pondLabels,
+                datasets: [{
+                    label: "Lượt hoạt động câu",
+                    data: pondValues,
+                    backgroundColor: "#0f766e",
+                    borderRadius: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0 }
+                    }
+                }
+            }
+        });
+    }
+
+    const fishCtx = document.getElementById("fishPieChart");
+    if (fishCtx) {
+        new Chart(fishCtx, {
+            type: "pie",
+            data: {
+                labels: fishLabels,
+                datasets: [{
+                    data: fishValues,
+                    backgroundColor: fishLabels.map((_, index) => chartPalette[index % chartPalette.length]),
+                    borderWidth: 2,
+                    borderColor: "#ffffff"
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                }
+            }
+        });
+    }
+</script>
 {% endblock %}

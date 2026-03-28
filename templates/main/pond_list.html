@@ -3,7 +3,7 @@
 {% block content %}
 <div class="row g-4">
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm mb-4">
             <div class="card-body">
                 <h2 class="h5 mb-3">Tìm kiếm hồ câu</h2>
                 <form method="get" class="row g-3">
@@ -37,6 +37,12 @@
                 </form>
             </div>
         </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <p class="small text-muted mb-3">Bản đồ chỉ hiển thị hồ đã được duyệt và đang hoạt động.</p>
+                <div id="pondMap" style="height: 420px; border-radius: 24px;"></div>
+            </div>
+        </div>
     </div>
     <div class="col-lg-8">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -56,9 +62,7 @@
                             <div class="d-flex flex-wrap gap-2 mb-3">
                                 <span class="badge rounded-pill text-bg-light">{{ pond.district.name }}</span>
                                 <span class="badge rounded-pill text-bg-light">{{ pond.fishing_type }}</span>
-                                <span class="badge rounded-pill {% if pond.available_slots > 0 %}text-bg-success{% else %}text-bg-danger{% endif %}">
-                                    {% if pond.available_slots > 0 %}Còn chỗ{% else %}Hết chỗ{% endif %}
-                                </span>
+                                <span class="badge rounded-pill text-bg-light">{{ pond.average_rating }}/5 sao</span>
                             </div>
                             <div class="small">
                                 <div>Giá vé: <strong>{{ "{:,.0f}".format(pond.price_per_slot) }} VND</strong></div>
@@ -78,4 +82,30 @@
         </div>
     </div>
 </div>
+
+<script id="pond-map-data" type="application/json">{{ map_ponds|tojson }}</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const pondMapData = JSON.parse(document.getElementById("pond-map-data").textContent || "[]");
+    const map = L.map("pondMap").setView([21.0285, 105.8542], 10);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
+
+    const bounds = [];
+    pondMapData.forEach((pond) => {
+        bounds.push([pond.lat, pond.lng]);
+        L.marker([pond.lat, pond.lng]).addTo(map)
+            .bindPopup(`<strong>${pond.name}</strong><br>${pond.district}<br>${pond.address}<br><a href="${pond.detail_url}">Xem chi tiết</a>`);
+    });
+
+    if (bounds.length) {
+        map.fitBounds(bounds, { padding: [24, 24], maxZoom: 13 });
+    }
+</script>
 {% endblock %}

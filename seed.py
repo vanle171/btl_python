@@ -11,6 +11,7 @@ from models import (
     Payment,
     PondFishType,
     PondService,
+    Promotion,
     Review,
     Role,
     Service,
@@ -223,6 +224,28 @@ def seed_data():
             PondService(pond=ponds[2], service=service_map["Ban moi cau"], custom_price=35000),
             PondService(pond=ponds[2], service=service_map["Do an nuoc uong"], custom_price=90000),
             PondService(pond=ponds[2], service=service_map["Bai gui xe"], custom_price=15000),
+        ]
+    )
+    db.session.add_all(
+        [
+            Promotion(
+                pond=ponds[0],
+                title="Ưu đãi cuối tuần",
+                description="Giảm giá cho khách đặt chỗ vào cuối tuần.",
+                discount_percent=10,
+                start_date=date.today(),
+                end_date=date.today() + timedelta(days=14),
+                is_active=True,
+            ),
+            Promotion(
+                pond=ponds[1],
+                title="Khuyến mãi nhóm bạn",
+                description="Giảm giá khi đặt từ 3 chỗ trở lên.",
+                discount_percent=15,
+                start_date=date.today(),
+                end_date=date.today() + timedelta(days=10),
+                is_active=True,
+            ),
         ]
     )
     db.session.add_all(

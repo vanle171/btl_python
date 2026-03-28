@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Quản lý khuyến mãi{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <div>
+                <h1 class="h4 mb-1">Quản lý khuyến mãi</h1>
+                <p class="text-muted mb-0">Tạo ưu đãi giảm giá cho từng hồ câu theo khoảng thời gian cụ thể.</p>
+            </div>
+            <a href="{{ url_for('owner.create_promotion') }}" class="btn btn-primary">Thêm khuyến mãi</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Hồ câu</th>
+                        <th>Tiêu đề</th>
+                        <th>Giảm giá</th>
+                        <th>Thời gian</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for promotion in promotions %}
+                        <tr>
+                            <td>{{ promotion.pond.name }}</td>
+                            <td>{{ promotion.title }}</td>
+                            <td>{{ promotion.discount_percent }}%</td>
+                            <td>{{ promotion.start_date.strftime("%d/%m/%Y") }} - {{ promotion.end_date.strftime("%d/%m/%Y") }}</td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ url_for('owner.edit_promotion', promotion_id=promotion.id) }}" class="btn btn-sm btn-outline-primary">Sửa</a>
+                                    <form method="post" action="{{ url_for('owner.delete_promotion', promotion_id=promotion.id) }}">
+                                        <button class="btn btn-sm btn-outline-danger">Xóa</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">Chưa có khuyến mãi nào.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

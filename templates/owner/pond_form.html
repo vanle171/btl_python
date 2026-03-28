@@ -48,7 +48,11 @@
                         {{ form.available_slots.label(class="form-label") }}
                         {{ form.available_slots(class="form-control") }}
                     </div>
-                    <div class="col-md-9">
+                    <div class="col-md-6">
+                        {{ form.status.label(class="form-label") }}
+                        {{ form.status(class="form-select") }}
+                    </div>
+                    <div class="col-md-6">
                         {{ form.image_url.label(class="form-label") }}
                         {{ form.image_url(class="form-control") }}
                     </div>

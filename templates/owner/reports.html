@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block title %}Báo cáo doanh thu{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+            <div>
+                <h1 class="h4 mb-1">Báo cáo theo hồ câu</h1>
+                <p class="text-muted mb-0">Theo dõi doanh thu, lượt đặt và hoạt động câu theo ngày, tuần hoặc tháng.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ url_for('owner.reports', period=period, pond_id=selected_pond_id, export='csv') }}" class="btn btn-outline-dark">Xuất CSV</a>
+                <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-primary">Về dashboard</a>
+            </div>
+        </div>
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Chu kỳ báo cáo</label>
+                <select name="period" class="form-select">
+                    <option value="day" {% if period == "day" %}selected{% endif %}>Theo ngày</option>
+                    <option value="week" {% if period == "week" %}selected{% endif %}>Theo tuần</option>
+                    <option value="month" {% if period == "month" %}selected{% endif %}>Theo tháng</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Từ ngày</label>
+                <input type="date" name="start_date" class="form-control" value="{{ start_date_param }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Đến ngày</label>
+                <input type="date" name="end_date" class="form-control" value="{{ end_date_param }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Hồ câu</label>
+                <select name="pond_id" class="form-select">
+                    {% for pond_id, pond_name in pond_choices %}
+                        <option value="{{ pond_id }}" {% if pond_id == selected_pond_id %}selected{% endif %}>{{ pond_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-12 d-grid">
+                <button class="btn btn-primary">Xem báo cáo</button>
+            </div>
+        </form>
+        <div class="mt-3 small text-muted">Khoảng thời gian: {{ period_label }}</div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <span class="stat-label">Doanh thu</span>
+            <h2>{{ "{:,.0f}".format(total_revenue) }}</h2>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <span class="stat-label">Lượt đặt</span>
+            <h2>{{ total_bookings }}</h2>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <span class="stat-label">Lượt hoạt động</span>
+            <h2>{{ total_activities }}</h2>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card">
+            <span class="stat-label">Hồ có phát sinh</span>
+            <h2>{{ active_ponds }}</h2>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Biểu đồ line theo {{ period_label|lower }}</h2>
+                    <span class="text-muted small">Doanh thu, lượt đặt, hoạt động</span>
+                </div>
+                <canvas id="reportLineChart" height="110"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <h2 class="h5 mb-3">Biểu đồ cột doanh thu theo hồ câu</h2>
+                <canvas id="reportRevenueChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <h2 class="h5 mb-3">Biểu đồ tròn lượt đặt và hoạt động</h2>
+                <canvas id="reportPieChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <h2 class="h5 mb-3">Chi tiết theo hồ câu</h2>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Hồ câu</th>
+                        <th>Doanh thu</th>
+                        <th>Lượt đặt</th>
+                        <th>Lượt hoạt động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            <td>{{ row.pond_name }}</td>
+                            <td>{{ "{:,.0f}".format(row.revenue) }} VND</td>
+                            <td>{{ row.booking_count }}</td>
+                            <td>{{ row.activity_count }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">Không có dữ liệu trong khoảng thời gian này.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script id="report-chart-labels" type="application/json">{{ chart_labels|tojson }}</script>
+<script id="report-revenue-values" type="application/json">{{ revenue_values|tojson }}</script>
+<script id="report-booking-values" type="application/json">{{ booking_values|tojson }}</script>
+<script id="report-activity-values" type="application/json">{{ activity_values|tojson }}</script>
+<script id="report-timeline-labels" type="application/json">{{ timeline_labels|tojson }}</script>
+<script id="report-timeline-revenue" type="application/json">{{ revenue_timeline|tojson }}</script>
+<script id="report-timeline-bookings" type="application/json">{{ booking_timeline|tojson }}</script>
+<script id="report-timeline-activities" type="application/json">{{ activity_timeline|tojson }}</script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const reportLabels = JSON.parse(document.getElementById("report-chart-labels").textContent || "[]");
+    const reportRevenueValues = JSON.parse(document.getElementById("report-revenue-values").textContent || "[]");
+    const reportBookingValues = JSON.parse(document.getElementById("report-booking-values").textContent || "[]");
+    const reportActivityValues = JSON.parse(document.getElementById("report-activity-values").textContent || "[]");
+    const reportTimelineLabels = JSON.parse(document.getElementById("report-timeline-labels").textContent || "[]");
+    const reportTimelineRevenue = JSON.parse(document.getElementById("report-timeline-revenue").textContent || "[]");
+    const reportTimelineBookings = JSON.parse(document.getElementById("report-timeline-bookings").textContent || "[]");
+    const reportTimelineActivities = JSON.parse(document.getElementById("report-timeline-activities").textContent || "[]");
+
+    const lineChartEl = document.getElementById("reportLineChart");
+    if (lineChartEl) {
+        new Chart(lineChartEl, {
+            type: "line",
+            data: {
+                labels: reportTimelineLabels,
+                datasets: [
+                    {
+                        label: "Doanh thu",
+                        data: reportTimelineRevenue,
+                        borderColor: "#0f766e",
+                        backgroundColor: "rgba(15, 118, 110, 0.12)",
+                        tension: 0.35,
+                        fill: true
+                    },
+                    {
+                        label: "Lượt đặt",
+                        data: reportTimelineBookings,
+                        borderColor: "#164e63",
+                        backgroundColor: "rgba(22, 78, 99, 0.12)",
+                        tension: 0.35
+                    },
+                    {
+                        label: "Lượt hoạt động",
+                        data: reportTimelineActivities,
+                        borderColor: "#f59e0b",
+                        backgroundColor: "rgba(245, 158, 11, 0.12)",
+                        tension: 0.35
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    const revenueChartEl = document.getElementById("reportRevenueChart");
+    if (revenueChartEl) {
+        new Chart(revenueChartEl, {
+            type: "bar",
+            data: {
+                labels: reportLabels,
+                datasets: [{
+                    label: "Doanh thu",
+                    data: reportRevenueValues,
+                    backgroundColor: "#0f766e",
+                    borderRadius: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    const pieChartEl = document.getElementById("reportPieChart");
+    if (pieChartEl) {
+        new Chart(pieChartEl, {
+            type: "pie",
+            data: {
+                labels: ["Lượt đặt", "Lượt hoạt động"],
+                datasets: [{
+                    data: [
+                        reportBookingValues.reduce((sum, item) => sum + item, 0),
+                        reportActivityValues.reduce((sum, item) => sum + item, 0)
+                    ],
+                    backgroundColor: ["#164e63", "#f59e0b"],
+                    borderColor: "#ffffff",
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

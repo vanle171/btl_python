@@ -11,7 +11,7 @@
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                     <div>
                         <h1 class="h4 mb-1">Tất cả hồ câu</h1>
-                        <p class="text-muted mb-0">Duyệt hồ câu mới được chủ hồ đăng lên hệ thống.</p>
+                        <p class="text-muted mb-0">Duyệt hồ câu mới và theo dõi trạng thái hoạt động do chủ hồ cập nhật.</p>
                     </div>
                     <a href="{{ url_for('admin.users') }}" class="btn btn-outline-primary">Quản lý người dùng</a>
                 </div>
@@ -23,7 +23,8 @@
                                 <th>Chủ hồ</th>
                                 <th>Quận/huyện</th>
                                 <th>Giá vé</th>
-                                <th>Duyet</th>
+                                <th>Trạng thái</th>
+                                <th>Duyệt</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -34,6 +35,11 @@
                                     <td>{{ pond.owner.full_name }}</td>
                                     <td>{{ pond.district.name }}</td>
                                     <td>{{ "{:,.0f}".format(pond.price_per_slot) }} VND</td>
+                                    <td>
+                                        <span class="badge {% if pond.status == 'open' %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                                            {% if pond.status == 'open' %}Đang hoạt động{% else %}Ngừng hoạt động{% endif %}
+                                        </span>
+                                    </td>
                                     <td>
                                         <span class="badge {% if pond.approved %}text-bg-success{% else %}text-bg-warning{% endif %}">
                                             {% if pond.approved %}Đã duyệt{% else %}Chờ duyệt{% endif %}

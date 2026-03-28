@@ -11,6 +11,7 @@
             <div class="d-flex gap-2 flex-wrap">
                 <a href="{{ url_for('owner.fish_types') }}" class="btn btn-outline-primary">Loại cá</a>
                 <a href="{{ url_for('owner.activities') }}" class="btn btn-outline-dark">Hoạt động câu</a>
+                <a href="{{ url_for('owner.promotions') }}" class="btn btn-outline-dark">Khuyến mãi</a>
                 <a href="{{ url_for('owner.create_pond') }}" class="btn btn-primary">Thêm hồ câu</a>
             </div>
         </div>
@@ -22,6 +23,7 @@
                         <th>Quận/huyện</th>
                         <th>Giá vé</th>
                         <th>Chỗ trống</th>
+                        <th>Trạng thái</th>
                         <th>Duyệt</th>
                         <th></th>
                     </tr>
@@ -33,6 +35,11 @@
                             <td>{{ pond.district.name }}</td>
                             <td>{{ "{:,.0f}".format(pond.price_per_slot) }} VND</td>
                             <td>{{ pond.available_slots }}/{{ pond.total_slots }}</td>
+                            <td>
+                                <span class="badge {% if pond.status == 'open' %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                                    {% if pond.status == 'open' %}Đang hoạt động{% else %}Ngừng hoạt động{% endif %}
+                                </span>
+                            </td>
                             <td>
                                 <span class="badge {% if pond.approved %}text-bg-success{% else %}text-bg-warning{% endif %}">
                                     {% if pond.approved %}Đã duyệt{% else %}Chờ duyệt{% endif %}
@@ -50,7 +57,7 @@
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">Bạn chưa tạo hồ câu nào.</td>
+                            <td colspan="7" class="text-center text-muted py-4">Bạn chưa tạo hồ câu nào.</td>
                         </tr>
                     {% endfor %}
                 </tbody>

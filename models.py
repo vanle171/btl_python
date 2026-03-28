@@ -117,6 +117,9 @@ class FishingPond(TimestampMixin, db.Model):
     fishing_activities = db.relationship(
         "FishingActivity", back_populates="pond", cascade="all, delete-orphan", lazy=True
     )
+    promotions = db.relationship(
+        "Promotion", back_populates="pond", cascade="all, delete-orphan", lazy=True
+    )
 
     @property
     def primary_image(self):
@@ -238,6 +241,21 @@ class Review(TimestampMixin, db.Model):
 
     user = db.relationship("User", back_populates="reviews")
     pond = db.relationship("FishingPond", back_populates="reviews")
+
+
+class Promotion(TimestampMixin, db.Model):
+    __tablename__ = "promotions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    pond_id = db.Column(db.Integer, db.ForeignKey("fishing_ponds.id"), nullable=False)
+    title = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text)
+    discount_percent = db.Column(db.Float, default=0, nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+
+    pond = db.relationship("FishingPond", back_populates="promotions")
 
 
 class Image(TimestampMixin, db.Model):
