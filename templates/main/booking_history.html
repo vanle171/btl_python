@@ -28,13 +28,32 @@
                         <tr>
                             <td>{{ booking.pond.name }}</td>
                             <td>{{ booking.booking_date.strftime("%d/%m/%Y") }}</td>
-                            <td>{{ booking.start_time }}</td>
+                            <td>{{ booking.start_time.strftime("%H:%M") }} - {{ booking.end_time.strftime("%H:%M") }}</td>
                             <td>{{ booking.slot_count }}</td>
                             <td>{{ "{:,.0f}".format(booking.total_price) }} VND</td>
-                            <td><span class="badge text-bg-light">{{ booking.status }}</span></td>
+                            <td>
+                                {% if booking.status == "pending" %}
+                                    <span class="badge text-bg-warning">Chờ duyệt</span>
+                                {% elif booking.status == "confirmed" %}
+                                    <span class="badge text-bg-success">Đã xác nhận</span>
+                                {% elif booking.status == "slot_conflict" %}
+                                    <span class="badge text-bg-danger">Trùng giờ</span>
+                                {% elif booking.status in ("cancelled", "user_cancelled") %}
+                                    <span class="badge text-bg-secondary">Đã hủy</span>
+                                {% elif booking.status == "owner_cancelled" %}
+                                    <span class="badge text-bg-secondary">Hủy bởi chủ hồ</span>
+                                {% elif booking.status == "admin_cancelled" %}
+                                    <span class="badge text-bg-secondary">Hủy bởi quản trị</span>
+                                {% elif booking.status == "completed" %}
+                                    <span class="badge text-bg-info">Hoàn tất</span>
+                                {% else %}
+                                    <span class="badge text-bg-light">{{ booking.status }}</span>
+                                {% endif %}
+                            </td>
                             <td class="text-end">
                                 {% if booking.can_cancel %}
-                                    <form method="post" action="{{ url_for('main.cancel_booking', booking_id=booking.id) }}">
+                                    <form method="post" action="{{ url_for('main.cancel_my_booking', booking_id=booking.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button class="btn btn-sm btn-outline-danger">Hủy đơn</button>
                                     </form>
                                 {% endif %}

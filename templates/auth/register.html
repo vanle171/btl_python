@@ -11,30 +11,37 @@
                     <div class="col-md-6">
                         {{ form.full_name.label(class="form-label") }}
                         {{ form.full_name(class="form-control") }}
+                        {% for error in form.full_name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ form.username.label(class="form-label") }}
                         {{ form.username(class="form-control") }}
+                        {% for error in form.username.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ form.email.label(class="form-label") }}
                         {{ form.email(class="form-control") }}
+                        {% for error in form.email.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ form.phone.label(class="form-label") }}
                         {{ form.phone(class="form-control") }}
+                        {% for error in form.phone.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ form.role.label(class="form-label") }}
                         {{ form.role(class="form-select") }}
+                        {% for error in form.role.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ form.password.label(class="form-label") }}
                         {{ form.password(class="form-control") }}
+                        {% for error in form.password.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ form.confirm_password.label(class="form-label") }}
                         {{ form.confirm_password(class="form-control") }}
+                        {% for error in form.confirm_password.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-primary">{{ form.submit.label.text }}</button>

@@ -6,7 +6,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import extract, func
 
 from extensions import db
-from forms import FishingActivityForm, PondFishTypeForm, PondForm, PondServiceForm
+from forms import FishingActivityForm, PondFishTypeForm, PondForm, PondServiceForm, generate_time_slots, parse_time
 from models import (
     Booking,
     District,
@@ -167,7 +167,7 @@ def edit_pond(pond_id):
         pond.fishing_type = form.fishing_type.data
         pond.price_per_slot = form.price_per_slot.data
         pond.total_slots = form.total_slots.data
-        pond.available_slots = min(form.available_slots.data, form.total_slots.data)
+        pond.available_slots = min(form.available_slots.data, pond.total_slots)
         pond.featured = form.featured.data
         if form.image_url.data:
             primary = next((image for image in pond.images if image.is_primary), None)
@@ -338,6 +338,11 @@ def activities():
     return render_template("owner/activities.html", activities=items)
 
 
+def _session_choices(pond):
+    slots = generate_time_slots(pond.open_time, pond.close_time, interval_minutes=60)
+    return [("", "— Chọn khung giờ —")] + [(s, l) for s, l in slots]
+
+
 @owner_bp.route("/activities/create", methods=["GET", "POST"])
 @owner_required
 def create_activity():
@@ -348,18 +353,36 @@ def create_activity():
         flash("Bạn cần tạo hồ câu trước khi thêm hoạt động câu.", "warning")
         return redirect(url_for("owner.pond_management"))
 
+    #? efault session choices from first pond so the form renders on GET
+    first_pond = FishingPond.query.get(form.pond_id.choices[0][0])
+    if first_pond:
+        form.session.choices = _session_choices(first_pond)
+
     if form.validate_on_submit():
         pond = FishingPond.query.get_or_404(form.pond_id.data)
         if pond.owner_id != current_user.id:
             abort(403)
+
+        form.session.choices = _session_choices(pond)
+        session_str = form.session.data
+        start_str, end_str = session_str, None
+        for s, l in _session_choices(pond):
+            if s == session_str:
+                end_str = l.split(" - ")[1]
+                break
+
+        if end_str is None:
+            flash("Vui lòng chọn khung giờ hợp lệ.", "danger")
+            return render_template("owner/activity_form.html", form=form, title="Thêm hoạt động câu")
+
         db.session.add(
             FishingActivity(
                 pond_id=pond.id,
                 fish_type_id=form.fish_type_id.data,
                 customer_name=form.customer_name.data,
                 activity_date=form.activity_date.data,
-                start_time=form.start_time.data,
-                duration_hours=form.duration_hours.data,
+                start_time=parse_time(start_str),
+                end_time=parse_time(end_str),
                 catch_weight=form.catch_weight.data or 0,
                 note=form.note.data,
             )
@@ -380,16 +403,32 @@ def edit_activity(activity_id):
     form = FishingActivityForm(obj=activity)
     form.pond_id.choices = _owner_pond_choices()
     form.fish_type_id.choices = _fish_type_choices()
+    form.session.choices = _session_choices(activity.pond)
+    form.session.data = activity.start_time.strftime("%H:%M")
+
     if form.validate_on_submit():
         pond = FishingPond.query.get_or_404(form.pond_id.data)
         if pond.owner_id != current_user.id:
             abort(403)
+
+        form.session.choices = _session_choices(pond)
+        session_str = form.session.data
+        start_str, end_str = session_str, None
+        for s, l in _session_choices(pond):
+            if s == session_str:
+                end_str = l.split(" - ")[1]
+                break
+
+        if end_str is None:
+            flash("Vui lòng chọn khung giờ hợp lệ.", "danger")
+            return render_template("owner/activity_form.html", form=form, title="Cập nhật hoạt động câu")
+
         activity.pond_id = pond.id
         activity.fish_type_id = form.fish_type_id.data
         activity.customer_name = form.customer_name.data
         activity.activity_date = form.activity_date.data
-        activity.start_time = form.start_time.data
-        activity.duration_hours = form.duration_hours.data
+        activity.start_time = parse_time(start_str)
+        activity.end_time = parse_time(end_str)
         activity.catch_weight = form.catch_weight.data or 0
         activity.note = form.note.data
         db.session.commit()
@@ -428,13 +467,39 @@ def confirm_booking(booking_id):
     booking = Booking.query.get_or_404(booking_id)
     if booking.pond.owner_id != current_user.id:
         abort(403)
+    if booking.status != "pending":
+        flash("Đơn này không còn ở trạng thái chờ xác nhận.", "warning")
+        return redirect(url_for("owner.bookings"))
+
+    conflicting = (
+        Booking.query
+        .filter(
+            Booking.id != booking.id,
+            Booking.pond_id == booking.pond_id,
+            Booking.booking_date == booking.booking_date,
+            Booking.status == "pending",
+            Booking.start_time < booking.end_time,
+            Booking.end_time > booking.start_time,
+        )
+        .all()
+    )
+    for other in conflicting:
+        other.status = "slot_conflict"
+        if other.payment:
+            other.payment.status = "refunded"
+        other.pond.available_slots += other.slot_count
+
     booking.status = "confirmed"
     booking.confirmed_at = datetime.utcnow()
     if booking.payment:
         booking.payment.status = "paid"
         booking.payment.paid_at = datetime.utcnow()
     db.session.commit()
-    flash("Đã xác nhận đơn đặt chỗ.", "success")
+
+    msg = "Đã xác nhận đơn đặt chỗ."
+    if conflicting:
+        msg += f" {len(conflicting)} đơn trùng giờ đã bị từ chối và hoàn slot."
+    flash(msg, "success")
     return redirect(url_for("owner.bookings"))
 
 
@@ -444,7 +509,7 @@ def cancel_booking(booking_id):
     booking = Booking.query.get_or_404(booking_id)
     if booking.pond.owner_id != current_user.id:
         abort(403)
-    if booking.status in {"pending", "confirmed"}:
+    if booking.status in {"pending", "confirmed", "slot_conflict"}:
         booking.pond.available_slots += booking.slot_count
     booking.status = "owner_cancelled"
     if booking.payment:

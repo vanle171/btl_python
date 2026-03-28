@@ -73,6 +73,43 @@
                     <p class="text-muted mb-0">Chưa có đánh giá nào.</p>
                 {% endfor %}
             </div>
+            {% if current_user.is_authenticated and current_user.is_customer and not already_reviewed %}
+            <div class="card-footer bg-white border-top">
+                <hr class="mt-0">
+                <h2 class="h5 mb-3">Viết đánh giá</h2>
+                <form method="post" action="{{ url_for('main.create_review', pond_id=pond.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-2">
+                        <label class="form-label">Đơn đặt đã xác nhận (tuỳ chọn)</label>
+                        <select name="booking_id" class="form-select form-select-sm">
+                            <option value="0">— Không chọn đơn cụ thể —</option>
+                            {% for b in confirmed_bookings %}
+                            <option value="{{ b.id }}">Đơn ngày {{ b.booking_date.strftime('%d/%m/%Y') }} ({{ b.time_display() }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Điểm đánh giá</label>
+                        <div class="rating-input d-flex gap-1">
+                            {% for i in range(1, 6) %}
+                                <input type="radio" class="btn-check" name="rating" id="star{{ i }}" value="{{ i }}" autocomplete="off" required>
+                                <label class="btn btn-outline-warning btn-sm" for="star{{ i }}">{{ i }}</label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Nhận xét</label>
+                        <textarea name="comment" class="form-control" rows="3" placeholder="Chia sẻ trải nghiệm của bạn..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Gửi đánh giá</button>
+                    <p class="text-muted small mt-2 mb-0">Đánh giá sẽ được hiển thị sau khi quản trị duyệt.</p>
+                </form>
+            </div>
+            {% elif current_user.is_authenticated and current_user.is_customer and already_reviewed %}
+            <div class="card-footer bg-white border-top">
+                <p class="text-muted small mb-0">Bạn đã đánh giá hồ câu này.</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

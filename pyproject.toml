@@ -1,0 +1,16 @@
+[project]
+name = "btl_python"
+version = "0.1.0"
+description = "HocAu — Fishing Pond Booking Platform"
+requires-python = ">=3.10"
+dependencies = [
+    "Flask==3.1.0",
+    "Flask-Login==0.6.3",
+    "Flask-SQLAlchemy==3.1.1",
+    "Flask-WTF==1.2.2",
+    "email-validator==2.2.0",
+    "SQLAlchemy==2.0.36",
+    "WTForms==3.2.1",
+    "python-dotenv==1.0.1",
+]
+

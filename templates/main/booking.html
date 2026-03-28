@@ -14,8 +14,8 @@
                         {{ form.booking_date(class="form-control") }}
                     </div>
                     <div class="col-md-6">
-                        {{ form.start_time.label(class="form-label") }}
-                        {{ form.start_time(class="form-control", placeholder="Ví dụ: 06:30") }}
+                        {{ form.session.label(class="form-label") }}
+                        {{ form.session(class="form-select") }}
                     </div>
                     <div class="col-md-6">
                         {{ form.slot_count.label(class="form-label") }}
@@ -32,5 +32,4 @@
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+</div>{% endblock %}

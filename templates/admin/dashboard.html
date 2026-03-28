@@ -33,8 +33,65 @@
             </div>
         </div>
 
-        <div class="row g-4 mt-1">
-            <div class="col-lg-7">
+        <div class="card border-0 shadow-sm mt-4 mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Đơn đăng kí hồ câu gần đây</h2>
+                    <a href="{{ url_for('admin.bookings') }}" class="btn btn-sm btn-outline-primary">Quản lý đặt chỗ</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Khách hàng</th>
+                                <th>Hồ câu</th>
+                                <th>Ngày đặt</th>
+                                <th>Số chỗ</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in recent_bookings %}
+                                <tr>
+                                    <td class="font-monospace">#{{ booking.id }}</td>
+                                    <td>{{ booking.user.full_name }}</td>
+                                    <td>{{ booking.pond.name }}</td>
+                                    <td>{{ booking.booking_date.strftime("%d/%m/%Y") }}</td>
+                                    <td>{{ booking.slot_count }}</td>
+                                    <td>{{ "{:,.0f}".format(booking.total_price) }} VND</td>
+                                    <td>
+                                {% if booking.status == "pending" %}
+                                    <span class="badge text-bg-warning">Chờ duyệt</span>
+                                {% elif booking.status == "confirmed" %}
+                                    <span class="badge text-bg-success">Đã duyệt</span>
+                                {% elif booking.status == "slot_conflict" %}
+                                    <span class="badge text-bg-danger">Trùng giờ</span>
+                                {% elif booking.status in ("cancelled", "user_cancelled") %}
+                                    <span class="badge text-bg-secondary">Đã hủy</span>
+                                {% elif booking.status == "admin_cancelled" %}
+                                    <span class="badge text-bg-secondary">Hủy bởi quản trị</span>
+                                {% elif booking.status == "completed" %}
+                                    <span class="badge text-bg-info">Hoàn tất</span>
+                                {% else %}
+                                    <span class="badge text-bg-light">{{ booking.status }}</span>
+                                {% endif %}
+                                </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">Chưa có đơn đặt nào.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-5">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -52,8 +109,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-5">
-                <div class="card border-0 shadow-sm h-100">
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
                         <h2 class="h5 mb-3">Hồ câu đang chờ duyệt</h2>
                         {% for pond in pending_ponds[:6] %}
@@ -68,6 +125,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 {% endblock %}

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
@@ -17,11 +18,15 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         role = Role.query.filter_by(name=form.role.data).first()
+        if not role:
+            flash("Vai trò không hợp lệ.", "danger")
+            return render_template("auth/register.html", form=form)
+
         user = User(
-            full_name=form.full_name.data,
-            username=form.username.data,
-            email=form.email.data,
-            phone=form.phone.data,
+            full_name=form.full_name.data.strip(),
+            username=form.username.data.strip(),
+            email=form.email.data.strip().lower(),
+            phone=form.phone.data.strip() if form.phone.data else None,
             role=role,
         )
         user.set_password(form.password.data)
@@ -40,7 +45,7 @@ def login():
     form = LoginForm()
     next_page = request.args.get("next")
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        user = User.query.filter_by(username=form.username.data.strip()).first()
         if not user or not user.check_password(form.password.data):
             flash("Thông tin đăng nhập không chính xác.", "danger")
         elif not user.is_active_account:

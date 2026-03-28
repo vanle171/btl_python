@@ -19,7 +19,6 @@
                         <th>Khách</th>
                         <th>Ngày</th>
                         <th>Giờ</th>
-                        <th>Số giờ</th>
                         <th>Khối lượng</th>
                         <th></th>
                     </tr>
@@ -31,13 +30,13 @@
                             <td>{{ activity.fish_type.name }}</td>
                             <td>{{ activity.customer_name }}</td>
                             <td>{{ activity.activity_date.strftime("%d/%m/%Y") }}</td>
-                            <td>{{ activity.start_time }}</td>
-                            <td>{{ activity.duration_hours }}</td>
+                            <td>{{ activity.start_time.strftime("%H:%M") }} - {{ activity.end_time.strftime("%H:%M") }}</td>
                             <td>{{ activity.catch_weight }} kg</td>
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2">
                                     <a href="{{ url_for('owner.edit_activity', activity_id=activity.id) }}" class="btn btn-sm btn-outline-primary">Sửa</a>
                                     <form method="post" action="{{ url_for('owner.delete_activity', activity_id=activity.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button class="btn btn-sm btn-outline-danger">Xóa</button>
                                     </form>
                                 </div>

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Duyệt đánh giá{% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-3">
+        {% include "admin/sidebar.html" %}
+    </div>
+    <div class="col-lg-9">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h1 class="h4 mb-1">Duyệt đánh giá</h1>
+                        <p class="text-muted mb-0">Xem và phê duyệt đánh giá từ khách hàng.</p>
+                    </div>
+                    <a href="{{ url_for('admin.ponds') }}" class="btn btn-outline-primary">Quản lý hồ câu</a>
+                </div>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Hồ câu</th>
+                                <th>Khách hàng</th>
+                                <th>Điểm</th>
+                                <th>Nhận xét</th>
+                                <th>Ngày</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for review in reviews %}
+                                <tr>
+                                    <td>{{ review.pond.name }}</td>
+                                    <td>{{ review.user.full_name }}</td>
+                                    <td>
+                                        <span class="badge text-bg-warning">{{ review.rating }}/5</span>
+                                    </td>
+                                    <td style="max-width: 200px;">
+                                        <span class="text-muted small">{{ review.comment or "—" }}</span>
+                                    </td>
+                                    <td>{{ review.created_at.strftime("%d/%m/%Y") }}</td>
+                                    <td class="text-end">
+                                        <div class="d-flex gap-2 justify-content-end flex-wrap">
+                                            <form method="post" action="{{ url_for('admin.approve_review', review_id=review.id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button class="btn btn-sm btn-outline-success">Duyệt</button>
+                                            </form>
+                                            <form method="post" action="{{ url_for('admin.reject_review', review_id=review.id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button class="btn btn-sm btn-outline-danger">Từ chối</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">Không có đánh giá nào chờ duyệt.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

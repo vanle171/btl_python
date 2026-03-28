@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Quản lý đặt chỗ (toàn hệ thống){% endblock %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-3">
+        {% include "admin/sidebar.html" %}
+    </div>
+    <div class="col-lg-9">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <h1 class="h4 mb-1">Quản lý đặt chỗ</h1>
+                        <p class="text-muted mb-0">Quản lý đặt chỗ của từng người dùng.</p>
+                </div>
+                <table class="table table-sm align-middle w-100 mb-0">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Username</th>
+                            <th>Khách hàng</th>
+                            <th>Hồ câu</th>
+                            <th>Ngày</th>
+                            <th>Giờ</th>
+                            <th>Chỗ</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th class="text-nowrap">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                            <tr>
+                                <td class="font-monospace text-nowrap">#{{ booking.id }}</td>
+                                <td class="text-break">{{ booking.user.username }}</td>
+                                <td class="text-break">
+                                    {{ booking.user.full_name }}
+                                    <div class="small text-muted">{{ booking.user.email }}</div>
+                                </td>
+                                <td class="text-break">{{ booking.pond.name }}</td>
+                                <td class="text-nowrap">{{ booking.booking_date.strftime("%d/%m/%Y") }}</td>
+                                <td class="text-nowrap">{{ booking.start_time.strftime("%H:%M") }} - {{ booking.end_time.strftime("%H:%M") }}</td>
+                                <td>{{ booking.slot_count }}</td>
+                                <td class="text-nowrap">{{ "{:,.0f}".format(booking.total_price) }} VND</td>
+                                <td>
+                                {% if booking.status == "pending" %}
+                                    <span class="badge text-bg-warning">Chờ duyệt</span>
+                                {% elif booking.status == "confirmed" %}
+                                    <span class="badge text-bg-success">Đã duyệt</span>
+                                {% elif booking.status == "slot_conflict" %}
+                                    <span class="badge text-bg-danger">Trùng giờ</span>
+                                {% elif booking.status in ("cancelled", "user_cancelled") %}
+                                    <span class="badge text-bg-secondary">Đã hủy</span>
+                                {% elif booking.status == "admin_cancelled" %}
+                                    <span class="badge text-bg-secondary">Hủy bởi quản trị</span>
+                                {% elif booking.status == "completed" %}
+                                    <span class="badge text-bg-info">Hoàn tất</span>
+                                {% else %}
+                                    <span class="badge text-bg-light">{{ booking.status }}</span>
+                                {% endif %}
+                                </td>
+                                <td class="text-nowrap">
+                                    <div class="d-inline-flex gap-1 align-items-center flex-nowrap">
+                                        {% if booking.status == "pending" %}
+                                        <form class="d-inline" method="post" action="{{ url_for('admin.confirm_booking', booking_id=booking.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Duyệt</button>
+                                        </form>
+                                        {% endif %}
+                                        <form class="d-inline" method="post" action="{{ url_for('admin.cancel_booking', booking_id=booking.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" {% if booking.status not in ["pending", "confirmed", "slot_conflict"] %}disabled{% endif %}>Hủy</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="10" class="text-center text-muted py-4">Chưa có đơn đặt nào.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
