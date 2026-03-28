@@ -19,7 +19,7 @@ def register():
     if form.validate_on_submit():
         role = Role.query.filter_by(name=form.role.data).first()
         if not role:
-            flash("Vai tro khong hop le.", "danger")
+            flash("Vai trò không hợp lệ.", "danger")
             return render_template("auth/register.html", form=form)
 
         user = User(
@@ -32,7 +32,7 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash("Dang ky thanh cong. Ban co the dang nhap ngay.", "success")
+        flash("Đăng ký thành công. Bạn có thể đăng nhập ngay.", "success")
         return redirect(url_for("auth.login"))
     return render_template("auth/register.html", form=form)
 
@@ -47,12 +47,12 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data.strip()).first()
         if not user or not user.check_password(form.password.data):
-            flash("Thong tin dang nhap khong chinh xac.", "danger")
+            flash("Thông tin đăng nhập không chính xác.", "danger")
         elif not user.is_active_account:
-            flash("Tai khoan dang bi khoa.", "danger")
+            flash("Tài khoản đang bị khóa.", "danger")
         else:
             login_user(user)
-            flash("Dang nhap thanh cong.", "success")
+            flash("Đăng nhập thành công.", "success")
             return redirect(next_page or url_for("main.index"))
     return render_template("auth/login.html", form=form)
 
@@ -61,5 +61,5 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash("Ban da dang xuat.", "info")
+    flash("Bạn đã đăng xuất.", "info")
     return redirect(url_for("main.index"))
